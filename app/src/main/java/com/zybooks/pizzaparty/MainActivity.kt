@@ -13,7 +13,10 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -36,6 +39,7 @@ import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
 import kotlin.math.ceil
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -99,7 +103,29 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
                }
             }
          )
-      }
+      },
+      bottomBar = {
+         BottomAppBar(
+            actions = {
+               IconButton(onClick = { /* Handle search click */ }) {
+                  Icon(
+                     imageVector = Icons.Default.Search,
+                     contentDescription = "Search"
+                  )
+               }
+            },
+            floatingActionButton = {
+               FloatingActionButton(
+                  onClick = { /* Handle FAB click (Add Vinyl) */ }
+               ) {
+                  Icon(
+                     imageVector = Icons.Default.Add,
+                     contentDescription = "Add Vinyl"
+                  )
+               }
+            }
+         )
+      } // Pretty much everything below this is subject to change
    ) { innerPadding ->
       Column(
          modifier = modifier
