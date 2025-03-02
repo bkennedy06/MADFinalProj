@@ -1,14 +1,19 @@
 package com.zybooks.pizzaparty
 
-import android.graphics.drawable.Icon
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -17,7 +22,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -34,7 +40,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
 import kotlin.math.ceil
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -43,6 +48,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.graphics.Color
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,7 +109,7 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
                }
             }
          )
-      },
+      }, // Hamburg icon and profile functionality needed
       bottomBar = {
          BottomAppBar(
             actions = {
@@ -116,51 +122,26 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
             },
             floatingActionButton = {
                FloatingActionButton(
-                  onClick = { /* Handle FAB click (Add Vinyl) */ }
+                  onClick = { /* Handle FAB click (Add Vinyl) */ },
+                  containerColor = Color(0xFF8A48E1) // Fab color
+
                ) {
                   Icon(
                      imageVector = Icons.Default.Add,
-                     contentDescription = "Add Vinyl"
+                     contentDescription = "Add Vinyl",
+                     tint = MaterialTheme.colorScheme.onPrimary // Change '+' color
                   )
                }
             }
          )
-      } // Pretty much everything below this is subject to change
+      } // FAB and search functionality needed
    ) { innerPadding ->
       Column(
          modifier = modifier
-            .padding(innerPadding) // This ensures content is positioned below the AppBar
+            .padding(innerPadding)
             .padding(10.dp)
       ) {
-         NumberField(
-            labelText = "Number of people?",
-            textInput = numPeopleInput,
-            onValueChange = { numPeopleInput = it },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-         )
-
-         RadioGroup(
-            labelText = "How hungry?",
-            radioOptions = listOf("Light", "Medium", "Ravenous"),
-            selectedOption = hungerLevel,
-            onSelected = { hungerLevel = it },
-            modifier = Modifier.fillMaxWidth()
-         )
-
-         Text(
-            text = "Total pizzas: $totalPizzas",
-            fontSize = 22.sp,
-            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
-         )
-
-         Button(
-            onClick = {
-               totalPizzas = calculateNumPizzas(numPeopleInput.toIntOrNull() ?: 0, hungerLevel)
-            },
-            modifier = Modifier.fillMaxWidth()
-         ) {
-            Text("Calculate")
-         }
+         VinylCollectionGrid()
       }
    }
 }
@@ -222,8 +203,48 @@ fun RadioGroup(
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun HomeScreenPreview() {
    PizzaPartyTheme {
       PizzaPartyScreen()
    }
+}
+
+@Composable
+fun VinylCollectionGrid() {
+   val sampleAlbums = List(6) { "Album ${it + 1}" } // Placeholder data
+
+   LazyVerticalGrid(
+      columns = GridCells.Fixed(2), // 2-column grid
+      modifier = Modifier.fillMaxSize(),
+      contentPadding = PaddingValues(8.dp)
+   ) {
+      items(sampleAlbums) { album ->
+         VinylItem(album)
+      }
+   }
+}
+
+@Composable
+fun VinylItem(album: String) {
+   Card(
+      modifier = Modifier
+         .padding(8.dp)
+         .fillMaxWidth()
+         .aspectRatio(1f),
+      colors = CardDefaults.cardColors(containerColor = Color.LightGray) // Placeholder color
+   ) {
+      Box(modifier = Modifier.fillMaxSize()) {
+         Text(
+            text = album,
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.bodyLarge
+         )
+      }
+   }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun VinylGridPreview() {
+   VinylCollectionGrid()
 }
