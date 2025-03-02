@@ -3,18 +3,23 @@ package com.zybooks.pizzaparty
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -22,6 +27,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +54,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.window.Dialog
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,7 +101,7 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
    Scaffold(
       topBar = {
          CenterAlignedTopAppBar(
-            title = { Text(text = "Record Holder") },
+            title = { Text(text = "Record Collection") },
             navigationIcon = {
                IconButton(onClick = { /* Handle menu click */ }) {
                   Icon(
@@ -211,40 +221,79 @@ fun HomeScreenPreview() {
 
 @Composable
 fun VinylCollectionGrid() {
-   val sampleAlbums = List(6) { "Album ${it + 1}" } // Placeholder data
+   val sampleAlbums = List(6) { "Album ${it + 1}" } // Placeholder album list
 
    LazyVerticalGrid(
-      columns = GridCells.Fixed(2), // 2-column grid
+      columns = GridCells.Fixed(2),
       modifier = Modifier.fillMaxSize(),
       contentPadding = PaddingValues(8.dp)
    ) {
       items(sampleAlbums) { album ->
-         VinylItem(album)
+         var showDialog by remember { mutableStateOf(false) }
+
+         VinylItem(
+            album = album,
+            onClick = { showDialog = true }
+         )
+
+         if (showDialog) {
+            VinylDetailsPopup(album = album, onDismiss = { showDialog = false })
+         }
       }
    }
 }
 
 @Composable
-fun VinylItem(album: String) {
+fun VinylItem(album: String, onClick: () -> Unit) {
    Card(
       modifier = Modifier
          .padding(8.dp)
          .fillMaxWidth()
-         .aspectRatio(1f),
-      colors = CardDefaults.cardColors(containerColor = Color.LightGray) // Placeholder color
+         .aspectRatio(1f)
+         .clickable { onClick() }, // Make album clickable
+      shape = RoundedCornerShape(12.dp),
    ) {
-      Box(modifier = Modifier.fillMaxSize()) {
-         Text(
-            text = album,
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyLarge
+      Box(
+         modifier = Modifier.fillMaxSize()
+      ) {
+         Image(
+            painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder image
+            contentDescription = "Album Cover",
+            modifier = Modifier
+               .fillMaxSize()
+               .clip(RoundedCornerShape(12.dp))
          )
       }
    }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun VinylGridPreview() {
-   VinylCollectionGrid()
+fun VinylDetailsPopup(album: String, onDismiss: () -> Unit) {
+   Dialog(onDismissRequest = { onDismiss() }) {
+      Surface(
+         shape = RoundedCornerShape(16.dp),
+         color = MaterialTheme.colorScheme.surface,
+         modifier = Modifier.padding(16.dp)
+      ) {
+         Column(
+            modifier = Modifier
+               .padding(16.dp)
+               .fillMaxWidth()
+         ) {
+            Text(text = album, style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Album details go here...", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+               Text("Close")
+            }
+         }
+      }
+   }
 }
+
+//@Preview(showBackground = true)
+//@Composable
+//fun VinylGridPreview() {
+//   VinylCollectionGrid()
+//}
