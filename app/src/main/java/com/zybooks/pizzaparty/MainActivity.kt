@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -204,30 +207,45 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
       Surface(
          shape = RoundedCornerShape(16.dp),
          color = MaterialTheme.colorScheme.surface,
-         modifier = Modifier.padding(16.dp)
+         modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
       ) {
          Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+               .fillMaxWidth()
+               .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
          ) {
+            Image(
+               painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder
+               contentDescription = "Album Cover",
+               modifier = Modifier
+                  .fillMaxWidth()
+                  .aspectRatio(1f)
+                  .clip(RoundedCornerShape(12.dp))
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text(text = album.name, style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Artist: ${album.artist}", style = MaterialTheme.typography.bodyLarge)
             Text(text = "Release Year: ${album.releaseYear}", style = MaterialTheme.typography.bodyLarge)
             Text(text = "Genre: ${album.genre}", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-               Text("Close")
-            }
          }
       }
    }
 }
 
 
+
+
 @Composable
 fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
    var albumName by remember { mutableStateOf("") }
+   var artist by remember { mutableStateOf("") }
    var releaseYear by remember { mutableStateOf("") }
    var genre by remember { mutableStateOf("") }
+   var albumCover by remember { mutableStateOf<Int?>(null) } // Placeholder for image
 
    Dialog(onDismissRequest = { onDismiss() }) {
       Surface(
@@ -251,6 +269,15 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
+               value = artist,
+               onValueChange = { artist = it },
+               label = { Text("Artist") },
+               singleLine = true,
+               modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
                value = releaseYear,
                onValueChange = { releaseYear = it },
                label = { Text("Release Year") },
@@ -268,12 +295,36 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Left-aligned Image Upload Button
+            Row(
+               modifier = Modifier.fillMaxWidth(),
+               verticalAlignment = Alignment.CenterVertically
+            ) {
+               IconButton(
+                  onClick = { /* TODO: Implement image picker */ },
+                  modifier = Modifier
+                     .size(50.dp)
+                     .clip(RoundedCornerShape(12.dp))
+                     .background(MaterialTheme.colorScheme.primaryContainer)
+               ) {
+                  Icon(
+                     imageVector = Icons.Default.Add,
+                     contentDescription = "Upload Album Cover",
+                     tint = MaterialTheme.colorScheme.onPrimaryContainer
+                  )
+               }
+               Spacer(modifier = Modifier.width(8.dp))
+               Text(text = "Upload Cover", style = MaterialTheme.typography.bodyLarge)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                Button(onClick = { onDismiss() }) {
                   Text("Cancel")
                }
                Button(onClick = {
-                  onAddAlbum(Album(albumName, releaseYear, genre))
+                  onAddAlbum(Album(albumName, artist, releaseYear, genre))
                   onDismiss()
                }) {
                   Text("Add")
@@ -284,8 +335,12 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
    }
 }
 
+
+
 data class Album(
    val name: String,
+   val artist: String,
    val releaseYear: String,
    val genre: String
 )
+
