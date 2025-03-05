@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -77,137 +78,63 @@ class MainActivity : ComponentActivity() {
    }
 }
 
-fun calculateNumPizzas(
-   numPeople: Int,
-   hungerLevel: String
-): Int {
-   val slicesPerPizza = 8
-   val slicesPerPerson = when (hungerLevel) {
-      "Light" -> 2
-      "Medium" -> 3
-      else -> 4
-   }
-
-   return ceil(numPeople * slicesPerPerson / slicesPerPizza.toDouble()).toInt()
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PizzaPartyScreen(modifier: Modifier = Modifier) {
-   var totalPizzas by remember { mutableIntStateOf(0) }
-   var numPeopleInput by remember { mutableStateOf("") }
-   var hungerLevel by remember { mutableStateOf("Medium") }
+   var showAddAlbumDialog by remember { mutableStateOf(false) }
+   var albumList by remember { mutableStateOf(mutableListOf<Album>()) } // Store user albums
 
    Scaffold(
       topBar = {
          CenterAlignedTopAppBar(
-            title = { Text(text = "Record Collection") },
+            title = { Text(text = "Collection") },
             navigationIcon = {
                IconButton(onClick = { /* Handle menu click */ }) {
-                  Icon(
-                     imageVector = Icons.Default.Menu, // Hamburger icon
-                     contentDescription = "Menu"
-                  )
+                  Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
                }
             },
             actions = {
                IconButton(onClick = { /* Handle profile click */ }) {
-                  Icon(
-                     imageVector = Icons.Default.AccountCircle, // Profile icon
-                     contentDescription = "Profile"
-                  )
+                  Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile")
                }
             }
          )
-      }, // Hamburg icon and profile functionality needed
+      },
       bottomBar = {
          BottomAppBar(
             actions = {
                IconButton(onClick = { /* Handle search click */ }) {
-                  Icon(
-                     imageVector = Icons.Default.Search,
-                     contentDescription = "Search"
-                  )
+                  Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                }
             },
             floatingActionButton = {
                FloatingActionButton(
-                  onClick = { /* Handle FAB click (Add Vinyl) */ },
-                  containerColor = Color(0xFF8A48E1) // Fab color
-
+                  onClick = { showAddAlbumDialog = true },
+                  containerColor = Color(0xFF8A48E1) // FAB color
                ) {
-                  Icon(
-                     imageVector = Icons.Default.Add,
-                     contentDescription = "Add Vinyl",
-                     tint = MaterialTheme.colorScheme.onPrimary // Change '+' color
-                  )
+                  Icon(imageVector = Icons.Default.Add, contentDescription = "Add Vinyl", tint = MaterialTheme.colorScheme.onPrimary)
                }
             }
          )
-      } // FAB and search functionality needed
+      }
    ) { innerPadding ->
       Column(
          modifier = modifier
             .padding(innerPadding)
             .padding(10.dp)
       ) {
-         VinylCollectionGrid()
+         VinylCollectionGrid(albumList) // Pass albums to grid
       }
    }
-}
 
-@Composable
-fun NumberField(
-   labelText: String,
-   textInput: String,
-   onValueChange: (String) -> Unit,
-   modifier: Modifier = Modifier
-) {
-   TextField(
-      value = textInput,
-      onValueChange = onValueChange,
-      label = { Text(labelText) },
-      singleLine = true,
-      keyboardOptions = KeyboardOptions(
-         keyboardType = KeyboardType.Number
-      ),
-      modifier = modifier
-   )
-}
-
-@Composable
-fun RadioGroup(
-   labelText: String,
-   radioOptions: List<String>,
-   selectedOption: String,
-   onSelected: (String) -> Unit,
-   modifier: Modifier = Modifier
-) {
-   val isSelectedOption: (String) -> Boolean = { selectedOption == it }
-
-   Column {
-      Text(labelText)
-      radioOptions.forEach { option ->
-         Row(
-            modifier = modifier
-               .selectable(
-                  selected = isSelectedOption(option),
-                  onClick = { onSelected(option) },
-                  role = Role.RadioButton
-               )
-               .padding(8.dp)
-         ) {
-            RadioButton(
-               selected = isSelectedOption(option),
-               onClick = null,
-               modifier = modifier.padding(end = 8.dp)
-            )
-            Text(
-               text = option,
-               modifier = modifier.fillMaxWidth()
-            )
+   if (showAddAlbumDialog) {
+      AddAlbumDialog(
+         onDismiss = { showAddAlbumDialog = false },
+         onAddAlbum = { newAlbum ->
+            albumList = albumList.toMutableList().apply { add(newAlbum) } // Add new album to list
          }
-      }
+      )
    }
 }
 
@@ -220,21 +147,16 @@ fun HomeScreenPreview() {
 }
 
 @Composable
-fun VinylCollectionGrid() {
-   val sampleAlbums = List(6) { "Album ${it + 1}" } // Placeholder album list
-
+fun VinylCollectionGrid(albums: List<Album>) {
    LazyVerticalGrid(
       columns = GridCells.Fixed(2),
       modifier = Modifier.fillMaxSize(),
       contentPadding = PaddingValues(8.dp)
    ) {
-      items(sampleAlbums) { album ->
+      items(albums) { album ->
          var showDialog by remember { mutableStateOf(false) }
 
-         VinylItem(
-            album = album,
-            onClick = { showDialog = true }
-         )
+         VinylItem(album = album, onClick = { showDialog = true })
 
          if (showDialog) {
             VinylDetailsPopup(album = album, onDismiss = { showDialog = false })
@@ -243,32 +165,41 @@ fun VinylCollectionGrid() {
    }
 }
 
+
 @Composable
-fun VinylItem(album: String, onClick: () -> Unit) {
+fun VinylItem(album: Album, onClick: () -> Unit) {
    Card(
       modifier = Modifier
          .padding(8.dp)
          .fillMaxWidth()
          .aspectRatio(1f)
-         .clickable { onClick() }, // Make album clickable
+         .clickable { onClick() },
       shape = RoundedCornerShape(12.dp),
    ) {
-      Box(
-         modifier = Modifier.fillMaxSize()
+      Column(
+         modifier = Modifier.fillMaxSize(),
+         horizontalAlignment = Alignment.CenterHorizontally
       ) {
          Image(
-            painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder image
+            painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder
             contentDescription = "Album Cover",
             modifier = Modifier
-               .fillMaxSize()
-               .clip(RoundedCornerShape(12.dp))
+               .fillMaxWidth()
+               .aspectRatio(1f)
+         )
+         Spacer(modifier = Modifier.height(8.dp))
+         Text(
+            text = album.name,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(8.dp)
          )
       }
    }
 }
 
+
 @Composable
-fun VinylDetailsPopup(album: String, onDismiss: () -> Unit) {
+fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
    Dialog(onDismissRequest = { onDismiss() }) {
       Surface(
          shape = RoundedCornerShape(16.dp),
@@ -276,13 +207,12 @@ fun VinylDetailsPopup(album: String, onDismiss: () -> Unit) {
          modifier = Modifier.padding(16.dp)
       ) {
          Column(
-            modifier = Modifier
-               .padding(16.dp)
-               .fillMaxWidth()
+            modifier = Modifier.padding(16.dp)
          ) {
-            Text(text = album, style = MaterialTheme.typography.headlineSmall)
+            Text(text = album.name, style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Album details go here...", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "Release Year: ${album.releaseYear}", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "Genre: ${album.genre}", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
                Text("Close")
@@ -292,8 +222,70 @@ fun VinylDetailsPopup(album: String, onDismiss: () -> Unit) {
    }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun VinylGridPreview() {
-//   VinylCollectionGrid()
-//}
+
+@Composable
+fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
+   var albumName by remember { mutableStateOf("") }
+   var releaseYear by remember { mutableStateOf("") }
+   var genre by remember { mutableStateOf("") }
+
+   Dialog(onDismissRequest = { onDismiss() }) {
+      Surface(
+         shape = RoundedCornerShape(16.dp),
+         color = MaterialTheme.colorScheme.surface,
+         modifier = Modifier.padding(16.dp)
+      ) {
+         Column(
+            modifier = Modifier.padding(16.dp)
+         ) {
+            Text(text = "Add Entry", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
+               value = albumName,
+               onValueChange = { albumName = it },
+               label = { Text("Title") },
+               singleLine = true,
+               modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
+               value = releaseYear,
+               onValueChange = { releaseYear = it },
+               label = { Text("Release Year") },
+               singleLine = true,
+               modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
+               value = genre,
+               onValueChange = { genre = it },
+               label = { Text("Genre") },
+               singleLine = true,
+               modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+               Button(onClick = { onDismiss() }) {
+                  Text("Cancel")
+               }
+               Button(onClick = {
+                  onAddAlbum(Album(albumName, releaseYear, genre))
+                  onDismiss()
+               }) {
+                  Text("Add")
+               }
+            }
+         }
+      }
+   }
+}
+
+data class Album(
+   val name: String,
+   val releaseYear: String,
+   val genre: String
+)
