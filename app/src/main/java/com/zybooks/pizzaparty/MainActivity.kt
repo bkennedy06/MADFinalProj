@@ -68,18 +68,19 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ListItem
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
-
       setContent {
          PizzaPartyTheme {
-            Surface(
-               modifier = Modifier.fillMaxSize(),
-               color = MaterialTheme.colorScheme.background
-            ) {
-               PizzaPartyScreen()
+            Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+               MainScreen()
             }
          }
       }
@@ -87,9 +88,22 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@Composable
+fun MainScreen() {
+   val navController = rememberNavController()
+   val settingsViewModel: SettingsViewModel = viewModel()
+
+   NavHost(navController = navController, startDestination = "home") {
+      composable("home") { PizzaPartyScreen(navController) }
+      composable("settings") { SettingsScreen(navController, settingsViewModel) }
+   }
+}
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PizzaPartyScreen(modifier: Modifier = Modifier) {
+fun PizzaPartyScreen(navController: NavController) {
    var showAddAlbumDialog by remember { mutableStateOf(false) }
    var albumList by remember { mutableStateOf(mutableListOf<Album>()) } // Store user albums
    var showBottomSheet by remember { mutableStateOf(false) }
@@ -130,7 +144,7 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
       }
    ) { innerPadding ->
       Column(
-         modifier = modifier
+         modifier = Modifier
             .padding(innerPadding)
             .padding(10.dp)
       ) {
@@ -156,7 +170,7 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
             ListItem(
                headlineContent = { Text("Settings") },
                leadingContent = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-               modifier = Modifier.clickable { /* Handle Settings*/ }
+               modifier = Modifier.clickable {navController.navigate("settings")}
             )
          }
       }
@@ -176,10 +190,12 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
+   val navController = rememberNavController() // fake it til ya make it
    PizzaPartyTheme {
-      PizzaPartyScreen()
+      PizzaPartyScreen(navController)
    }
 }
+
 
 @Composable
 fun VinylCollectionGrid(albums: List<Album>) {
