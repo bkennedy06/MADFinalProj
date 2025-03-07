@@ -1,13 +1,17 @@
 package com.zybooks.pizzaparty
 
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,9 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -33,36 +35,34 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
-import kotlin.math.ceil
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import android.graphics.ImageDecoder
+import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,6 +171,21 @@ fun VinylCollectionGrid(albums: List<Album>) {
 
 @Composable
 fun VinylItem(album: Album, onClick: () -> Unit) {
+   val context = LocalContext.current
+
+   val bitmap = remember(album.imageUri) {
+      album.imageUri.takeIf { it.isNotEmpty() }?.let { uriString ->
+         val uri = Uri.parse(uriString)
+         if (Build.VERSION.SDK_INT < 28) {
+            @Suppress("DEPRECATION")
+            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+         } else {
+            val source = ImageDecoder.createSource(context.contentResolver, uri)
+            ImageDecoder.decodeBitmap(source)
+         }
+      }
+   }
+
    Card(
       modifier = Modifier
          .padding(8.dp)
@@ -183,12 +198,23 @@ fun VinylItem(album: Album, onClick: () -> Unit) {
          modifier = Modifier.fillMaxSize(),
          horizontalAlignment = Alignment.CenterHorizontally
       ) {
-         Image(
+         bitmap?.let {
+            Image(
+               bitmap = it.asImageBitmap(),
+               contentDescription = "Album Cover",
+               modifier = Modifier
+                  .fillMaxWidth()
+                  .aspectRatio(1f)
+                  .clip(RoundedCornerShape(12.dp)),
+               contentScale = ContentScale.Crop
+            )
+         } ?: Image(
             painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder
-            contentDescription = "Album Cover",
+            contentDescription = "Placeholder Album Cover",
             modifier = Modifier
                .fillMaxWidth()
                .aspectRatio(1f)
+               .clip(RoundedCornerShape(12.dp))
          )
          Spacer(modifier = Modifier.height(8.dp))
          Text(
@@ -203,6 +229,21 @@ fun VinylItem(album: Album, onClick: () -> Unit) {
 
 @Composable
 fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
+   val context = LocalContext.current
+
+   val bitmap = remember(album.imageUri) {
+      album.imageUri.takeIf { it.isNotEmpty() }?.let { uriString ->
+         val uri = Uri.parse(uriString)
+         if (Build.VERSION.SDK_INT < 28) {
+            @Suppress("DEPRECATION")
+            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+         } else {
+            val source = ImageDecoder.createSource(context.contentResolver, uri)
+            ImageDecoder.decodeBitmap(source)
+         }
+      }
+   }
+
    Dialog(onDismissRequest = { onDismiss() }) {
       Surface(
          shape = RoundedCornerShape(16.dp),
@@ -217,9 +258,19 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
          ) {
-            Image(
-               painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder
-               contentDescription = "Album Cover",
+            bitmap?.let {
+               Image(
+                  bitmap = it.asImageBitmap(),
+                  contentDescription = "Album Cover",
+                  modifier = Modifier
+                     .fillMaxWidth()
+                     .aspectRatio(1f)
+                     .clip(RoundedCornerShape(12.dp)),
+                  contentScale = ContentScale.Crop
+               )
+            } ?: Image(
+               painter = painterResource(id = android.R.drawable.ic_menu_gallery),
+               contentDescription = "Placeholder Album Cover",
                modifier = Modifier
                   .fillMaxWidth()
                   .aspectRatio(1f)
@@ -231,13 +282,13 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
             Text(text = "Release Year: ${album.releaseYear}", style = MaterialTheme.typography.bodyLarge)
             Text(text = "Genre: ${album.genre}", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+               Text("Close")
+            }
          }
       }
    }
 }
-
-
-
 
 @Composable
 fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
@@ -245,7 +296,14 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
    var artist by remember { mutableStateOf("") }
    var releaseYear by remember { mutableStateOf("") }
    var genre by remember { mutableStateOf("") }
-   var albumCover by remember { mutableStateOf<Int?>(null) } // Placeholder for image
+   var albumCoverUri by remember { mutableStateOf<Uri?>(null) }
+   val context = LocalContext.current
+
+   val imagePickerLauncher = rememberLauncherForActivityResult(
+      contract = ActivityResultContracts.GetContent()
+   ) { uri: Uri? ->
+      albumCoverUri = uri
+   }
 
    Dialog(onDismissRequest = { onDismiss() }) {
       Surface(
@@ -259,62 +317,54 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
             Text(text = "Add Entry", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextField(
-               value = albumName,
-               onValueChange = { albumName = it },
-               label = { Text("Title") },
-               singleLine = true,
-               modifier = Modifier.fillMaxWidth()
-            )
+            TextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextField(
-               value = artist,
-               onValueChange = { artist = it },
-               label = { Text("Artist") },
-               singleLine = true,
-               modifier = Modifier.fillMaxWidth()
-            )
+            TextField(value = artist, onValueChange = { artist = it }, label = { Text("Artist") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextField(
-               value = releaseYear,
-               onValueChange = { releaseYear = it },
-               label = { Text("Release Year") },
-               singleLine = true,
-               modifier = Modifier.fillMaxWidth()
-            )
+            TextField(value = releaseYear, onValueChange = { releaseYear = it }, label = { Text("Release Year") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextField(
-               value = genre,
-               onValueChange = { genre = it },
-               label = { Text("Genre") },
-               singleLine = true,
-               modifier = Modifier.fillMaxWidth()
-            )
+            TextField(value = genre, onValueChange = { genre = it }, label = { Text("Genre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Left-aligned Image Upload Button
+            // Image Selection Row
             Row(
                modifier = Modifier.fillMaxWidth(),
                verticalAlignment = Alignment.CenterVertically
             ) {
                IconButton(
-                  onClick = { /* TODO: Implement image picker */ },
+                  onClick = { imagePickerLauncher.launch("image/*") },
                   modifier = Modifier
                      .size(50.dp)
                      .clip(RoundedCornerShape(12.dp))
                      .background(MaterialTheme.colorScheme.primaryContainer)
                ) {
-                  Icon(
-                     imageVector = Icons.Default.Add,
-                     contentDescription = "Upload Album Cover",
-                     tint = MaterialTheme.colorScheme.onPrimaryContainer
-                  )
+                  Icon(imageVector = Icons.Default.Add, contentDescription = "Upload Album Cover", tint = MaterialTheme.colorScheme.onPrimaryContainer)
                }
                Spacer(modifier = Modifier.width(8.dp))
-               Text(text = "Upload Cover", style = MaterialTheme.typography.bodyLarge)
+
+               albumCoverUri?.let { uri ->
+                  val bitmap = remember(uri) {
+                     if (Build.VERSION.SDK_INT < 28) {
+                        @Suppress("DEPRECATION")
+                        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                     } else {
+                        val source = ImageDecoder.createSource(context.contentResolver, uri)
+                        ImageDecoder.decodeBitmap(source)
+                     }
+                  }
+
+                  Image(
+                     bitmap = bitmap.asImageBitmap(),
+                     contentDescription = "Selected Image",
+                     modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                     contentScale = ContentScale.Crop
+                  )
+               } ?: Text(text = "Upload Cover", style = MaterialTheme.typography.bodyLarge)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -324,8 +374,10 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
                   Text("Cancel")
                }
                Button(onClick = {
-                  onAddAlbum(Album(albumName, artist, releaseYear, genre))
-                  onDismiss()
+                  if (albumName.isNotBlank() && albumCoverUri != null) {
+                     onAddAlbum(Album(albumName, artist, releaseYear, genre, albumCoverUri.toString()))
+                     onDismiss()
+                  }
                }) {
                   Text("Add")
                }
@@ -336,11 +388,10 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
 }
 
 
-
 data class Album(
    val name: String,
    val artist: String,
    val releaseYear: String,
-   val genre: String
+   val genre: String,
+   val imageUri: String // Store image as a URI string
 )
-
