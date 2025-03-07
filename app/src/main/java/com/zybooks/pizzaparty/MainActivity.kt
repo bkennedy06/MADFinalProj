@@ -62,7 +62,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import android.graphics.ImageDecoder
+import androidx.compose.material.icons.filled.Info
 import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ListItem
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,13 +92,15 @@ class MainActivity : ComponentActivity() {
 fun PizzaPartyScreen(modifier: Modifier = Modifier) {
    var showAddAlbumDialog by remember { mutableStateOf(false) }
    var albumList by remember { mutableStateOf(mutableListOf<Album>()) } // Store user albums
+   var showBottomSheet by remember { mutableStateOf(false) }
+
 
    Scaffold(
       topBar = {
          CenterAlignedTopAppBar(
             title = { Text(text = "Collection") },
             navigationIcon = {
-               IconButton(onClick = { /* Handle menu click */ }) {
+               IconButton(onClick = { showBottomSheet = true }) {
                   Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
                }
             },
@@ -131,6 +138,31 @@ fun PizzaPartyScreen(modifier: Modifier = Modifier) {
       }
    }
 
+   if (showBottomSheet) {
+      ModalBottomSheet(
+         onDismissRequest = { showBottomSheet = false }
+      ) {
+         Column {
+            ListItem(
+               headlineContent = { Text("Wishlist") },
+               leadingContent = { Icon(Icons.Default.List, contentDescription = "Wishlist") },
+               modifier = Modifier.clickable { /* Handle Wishlist */ }
+            )
+            ListItem(
+               headlineContent = { Text("Statistics") },
+               leadingContent = { Icon(Icons.Default.Info, contentDescription = "Statistics") },
+               modifier = Modifier.clickable { /* Handle Statistics */ }
+            )
+            ListItem(
+               headlineContent = { Text("Settings") },
+               leadingContent = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+               modifier = Modifier.clickable { /* Handle Settings*/ }
+            )
+         }
+      }
+   }
+
+
    if (showAddAlbumDialog) {
       AddAlbumDialog(
          onDismiss = { showAddAlbumDialog = false },
@@ -167,7 +199,6 @@ fun VinylCollectionGrid(albums: List<Album>) {
       }
    }
 }
-
 
 @Composable
 fun VinylItem(album: Album, onClick: () -> Unit) {
@@ -225,7 +256,6 @@ fun VinylItem(album: Album, onClick: () -> Unit) {
       }
    }
 }
-
 
 @Composable
 fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
