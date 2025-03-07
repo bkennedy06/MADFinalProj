@@ -91,23 +91,20 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
    val navController = rememberNavController()
-   val settingsViewModel: SettingsViewModel = viewModel()
+   val vinylCollectionViewModel: VinylCollectionViewModel = viewModel() // Shared ViewModel
 
    NavHost(navController = navController, startDestination = "home") {
-      composable("home") { PizzaPartyScreen(navController) }
-      composable("settings") { SettingsScreen(navController, settingsViewModel) }
+      composable("home") { PizzaPartyScreen(navController, vinylCollectionViewModel) }
+      composable("settings") { SettingsScreen(navController) }
    }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PizzaPartyScreen(navController: NavController) {
-   var showAddAlbumDialog by remember { mutableStateOf(false) }
-   var albumList by remember { mutableStateOf(mutableListOf<Album>()) } // Store user albums
+fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: VinylCollectionViewModel = viewModel()) {
+   val albumList by vinylCollectionViewModel.albumList
    var showBottomSheet by remember { mutableStateOf(false) }
-
+   var showAddAlbumDialog by remember { mutableStateOf(false) }
 
    Scaffold(
       topBar = {
@@ -135,9 +132,10 @@ fun PizzaPartyScreen(navController: NavController) {
             floatingActionButton = {
                FloatingActionButton(
                   onClick = { showAddAlbumDialog = true },
-                  containerColor = Color(0xFF8A48E1) // FAB color
+                  containerColor = Color(0xFF8A48E1)
                ) {
-                  Icon(imageVector = Icons.Default.Add, contentDescription = "Add Vinyl", tint = MaterialTheme.colorScheme.onPrimary)
+                  Icon(imageVector = Icons.Default.Add, contentDescription = "Add Vinyl",
+                     tint = MaterialTheme.colorScheme.onPrimary)
                }
             }
          )
@@ -148,10 +146,11 @@ fun PizzaPartyScreen(navController: NavController) {
             .padding(innerPadding)
             .padding(10.dp)
       ) {
-         VinylCollectionGrid(albumList) // Pass albums to grid
+         VinylCollectionGrid(albumList)
       }
    }
 
+   // Bottom menu
    if (showBottomSheet) {
       ModalBottomSheet(
          onDismissRequest = { showBottomSheet = false }
@@ -170,18 +169,20 @@ fun PizzaPartyScreen(navController: NavController) {
             ListItem(
                headlineContent = { Text("Settings") },
                leadingContent = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-               modifier = Modifier.clickable {navController.navigate("settings")}
+               modifier = Modifier.clickable {
+                  showBottomSheet = false
+                  navController.navigate("settings") // Straight to settings
+               }
             )
          }
       }
    }
 
-
    if (showAddAlbumDialog) {
       AddAlbumDialog(
          onDismiss = { showAddAlbumDialog = false },
          onAddAlbum = { newAlbum ->
-            albumList = albumList.toMutableList().apply { add(newAlbum) } // Add new album to list
+            vinylCollectionViewModel.addAlbum(newAlbum)
          }
       )
    }
