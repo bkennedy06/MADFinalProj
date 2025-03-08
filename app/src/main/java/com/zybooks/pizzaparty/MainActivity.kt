@@ -73,6 +73,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ListItem
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.scale
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -186,7 +187,7 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
                style = MaterialTheme.typography.bodyLarge
             )
          } else {
-            VinylCollectionGrid(albumList)
+            VinylCollectionGrid(albums = albumList, onDeleteAlbum = { vinylCollectionViewModel.deleteAlbum(it) })
          }
       }
    }
@@ -242,7 +243,7 @@ fun HomeScreenPreview() {
 
 
 @Composable
-fun VinylCollectionGrid(albums: List<Album>) {
+fun VinylCollectionGrid(albums: List<Album>, onDeleteAlbum: (Album) -> Unit) {
    LazyVerticalGrid(
       columns = GridCells.Fixed(2),
       modifier = Modifier.fillMaxSize(),
@@ -254,7 +255,11 @@ fun VinylCollectionGrid(albums: List<Album>) {
          VinylItem(album = album, onClick = { showDialog = true })
 
          if (showDialog) {
-            VinylDetailsPopup(album = album, onDismiss = { showDialog = false })
+            VinylDetailsPopup(
+               album = album,
+               onDismiss = { showDialog = false },
+               onDelete = { onDeleteAlbum(it) }
+            )
          }
       }
    }
@@ -318,8 +323,9 @@ fun VinylItem(album: Album, onClick: () -> Unit) {
 }
 
 @Composable
-fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
+fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: (Album) -> Unit) {
    val context = LocalContext.current
+   var showDeleteDialog by remember { mutableStateOf(false) }
 
    val bitmap = remember(album.imageUri) {
       album.imageUri.takeIf { it.isNotEmpty() }?.let { uriString ->
@@ -366,19 +372,43 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit) {
                   .aspectRatio(1f)
                   .clip(RoundedCornerShape(12.dp))
             )
+
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = album.name, style = MaterialTheme.typography.headlineSmall)
             Text(text = "Artist: ${album.artist}", style = MaterialTheme.typography.bodyLarge)
             Text(text = "Release Year: ${album.releaseYear}", style = MaterialTheme.typography.bodyLarge)
             Text(text = "Genre: ${album.genre}", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-               Text("Close")
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+               Button(onClick = { onDismiss() }) {
+                  Text("Close")
+               }
+               Button(
+                  onClick = { showDeleteDialog = true },
+                  colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+               ) {
+                  Text("Delete")
+               }
             }
          }
       }
    }
+
+   // Confirmation Dialog
+   if (showDeleteDialog) {
+      DeleteConfirmationDialog(
+         album = album,
+         onDismiss = { showDeleteDialog = false },
+         onConfirmDelete = {
+            onDelete(album)
+            showDeleteDialog = false
+            onDismiss()
+         }
+      )
+   }
 }
+
 
 @Composable
 fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
@@ -470,6 +500,37 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
                   }
                }) {
                   Text("Add")
+               }
+            }
+         }
+      }
+   }
+}
+
+@Composable
+fun DeleteConfirmationDialog(album: Album, onDismiss: () -> Unit, onConfirmDelete: () -> Unit) {
+   Dialog(onDismissRequest = { onDismiss() }) {
+      Surface(
+         shape = RoundedCornerShape(16.dp),
+         color = MaterialTheme.colorScheme.surface,
+         modifier = Modifier.padding(16.dp)
+      ) {
+         Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+         ) {
+            Text("Delete Album?", style = MaterialTheme.typography.headlineSmall)
+            Text("Are you sure you want to delete \"${album.name}\"?", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+               Button(onClick = { onDismiss() }) {
+                  Text("Cancel")
+               }
+               Button(
+                  onClick = { onConfirmDelete() },
+                  colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+               ) {
+                  Text("Delete")
                }
             }
          }

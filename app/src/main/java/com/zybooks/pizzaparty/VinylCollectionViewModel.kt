@@ -14,5 +14,8 @@ class VinylCollectionViewModel : ViewModel() {
     fun addAlbum(album: Album) {
         _albumList.value = _albumList.value + album
     }
-}
 
+    fun deleteAlbum(album: Album) {
+        _albumList.value = _albumList.value.filter { it != album }
+    }
+}
