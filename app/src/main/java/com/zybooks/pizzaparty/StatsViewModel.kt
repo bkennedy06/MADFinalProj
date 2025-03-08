@@ -31,13 +31,18 @@ class StatsViewModel : ViewModel() {
     private val _totalArtists = mutableStateOf(0)
     val totalArtists: State<Int> = _totalArtists
 
-    private val _mostOwnedArtist = mutableStateOf("")
+    private val _mostOwnedArtist = mutableStateOf("n/a")
     val mostOwnedArtist: State<String> = _mostOwnedArtist
 
     private val _totalMarketValue = mutableStateOf(0.0)
     val totalMarketValue: State<Double> = _totalMarketValue
 
-    // Placeholder for stat calculation
+    private val _oldestAlbum = mutableStateOf("Unknown")
+    val oldestAlbum: State<String> = _oldestAlbum
+
+    private val _mostExpensiveAlbum = mutableStateOf("Unknown ($0.00)")
+    val mostExpensiveAlbum: State<String> = _mostExpensiveAlbum
+
     fun updateStats() {
     }
 }
@@ -64,13 +69,16 @@ fun StatsScreen(navController: NavController, statsViewModel: StatsViewModel = v
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatsRow("Total Albums Owned:")
-            StatsRow("Total Artists:")
-            StatsRow("Most Owned Artist:")
-            StatsRow("Total Market Value:")
+            StatsRow("Total Albums Owned: ${statsViewModel.totalAlbums.value}")
+            StatsRow("Total Artists: ${statsViewModel.totalArtists.value}")
+            StatsRow("Most Owned Artist: ${statsViewModel.mostOwnedArtist.value}")
+            StatsRow("Total Market Value: $${statsViewModel.totalMarketValue.value}")
+            StatsRow("Oldest Album: ${statsViewModel.oldestAlbum.value}")
+            StatsRow("Most Expensive Album: ${statsViewModel.mostExpensiveAlbum.value}")
         }
     }
 }
+
 
 @Composable
 fun StatsRow(label: String) {
