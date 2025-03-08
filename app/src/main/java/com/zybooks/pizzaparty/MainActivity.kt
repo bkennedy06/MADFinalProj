@@ -62,17 +62,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import android.graphics.ImageDecoder
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.Info
 import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ListItem
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.scale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,9 +139,25 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
                }
             },
             floatingActionButton = {
+               var fabScale by remember { mutableStateOf(1f) }
+               var hasAnimated by remember { mutableStateOf(false) } // Tracks if animation has run
+
+               LaunchedEffect(albumList.isNotEmpty()) {
+                  if (!hasAnimated && albumList.isEmpty()) {
+                     hasAnimated = true
+                     while (true) {
+                        fabScale = 1.2f
+                        delay(500)
+                        fabScale = 1f
+                        delay(500)
+                     }
+                  }
+               }
+
                FloatingActionButton(
                   onClick = { showAddAlbumDialog = true },
-                  containerColor = Color(0xFF8A48E1)
+                  containerColor = Color(0xFF8A48E1),
+                  modifier = Modifier.scale(fabScale) // Apply scale animation
                ) {
                   Icon(imageVector = Icons.Default.Add, contentDescription = "Add Vinyl",
                      tint = MaterialTheme.colorScheme.onPrimary)
@@ -146,12 +170,27 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
          modifier = Modifier
             .padding(innerPadding)
             .padding(10.dp)
+            .fillMaxSize(),
+         verticalArrangement = Arrangement.Center,
+         horizontalAlignment = Alignment.CenterHorizontally
       ) {
-         VinylCollectionGrid(albumList)
+         if (albumList.isEmpty()) {
+            // Show empty state message if no albums
+            Text(
+               text = "Wow, it's empty in here...",
+               style = MaterialTheme.typography.headlineSmall,
+               modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+               text = "Let's start building your collection!",
+               style = MaterialTheme.typography.bodyLarge
+            )
+         } else {
+            VinylCollectionGrid(albumList)
+         }
       }
    }
 
-   // Bottom menu
    if (showBottomSheet) {
       ModalBottomSheet(
          onDismissRequest = { showBottomSheet = false }
@@ -167,7 +206,7 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
                leadingContent = { Icon(Icons.Default.Info, contentDescription = "Statistics") },
                modifier = Modifier.clickable {
                   showBottomSheet = false
-                  navController.navigate("stats") // to StatsScreen
+                  navController.navigate("stats")
                }
             )
             ListItem(
@@ -175,7 +214,7 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
                leadingContent = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
                modifier = Modifier.clickable {
                   showBottomSheet = false
-                  navController.navigate("settings") // Straight to settings
+                  navController.navigate("settings")
                }
             )
          }
@@ -444,5 +483,5 @@ data class Album(
    val artist: String,
    val releaseYear: String,
    val genre: String,
-   val imageUri: String // Store image as a URI string
+   val imageUri: String
 )
