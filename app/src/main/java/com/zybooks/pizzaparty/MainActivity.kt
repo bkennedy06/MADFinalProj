@@ -96,6 +96,7 @@ fun MainScreen() {
    NavHost(navController = navController, startDestination = "home") {
       composable("home") { PizzaPartyScreen(navController, vinylCollectionViewModel) }
       composable("settings") { SettingsScreen(navController) }
+      composable("stats") { StatsScreen(navController) }
    }
 }
 
@@ -164,7 +165,10 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
             ListItem(
                headlineContent = { Text("Statistics") },
                leadingContent = { Icon(Icons.Default.Info, contentDescription = "Statistics") },
-               modifier = Modifier.clickable { /* Handle Statistics */ }
+               modifier = Modifier.clickable {
+                  showBottomSheet = false
+                  navController.navigate("stats") // to StatsScreen
+               }
             )
             ListItem(
                headlineContent = { Text("Settings") },
