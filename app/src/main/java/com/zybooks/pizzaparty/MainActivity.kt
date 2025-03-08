@@ -62,11 +62,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import android.graphics.ImageDecoder
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -74,14 +72,12 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,10 +107,22 @@ fun MainScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: VinylCollectionViewModel = viewModel()) {
+fun PizzaPartyScreen(
+   navController: NavController,
+   vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
+) {
    val albumList by vinylCollectionViewModel.albumList
    var showBottomSheet by remember { mutableStateOf(false) }
    var showAddAlbumDialog by remember { mutableStateOf(false) }
+   var isSearching by remember { mutableStateOf(false) }  // Controls search bar visibility
+   var searchQuery by remember { mutableStateOf("") } // Stores search query
+   val focusManager = LocalFocusManager.current
+
+   // Filter albums based on search query
+   val filteredAlbums = albumList.filter { album ->
+      album.name.contains(searchQuery, ignoreCase = true) ||
+              album.artist.contains(searchQuery, ignoreCase = true)
+   }
 
    Scaffold(
       topBar = {
@@ -126,7 +134,7 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
                }
             },
             actions = {
-               IconButton(onClick = { /* Handle profile click */ }) {
+               IconButton(onClick = { navController.navigate("settings") }) {
                   Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile")
                }
             }
@@ -135,33 +143,16 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
       bottomBar = {
          BottomAppBar(
             actions = {
-               IconButton(onClick = { /* Handle search click */ }) {
+               IconButton(onClick = { isSearching = true }) {
                   Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                }
             },
             floatingActionButton = {
-               var fabScale by remember { mutableStateOf(1f) }
-               var hasAnimated by remember { mutableStateOf(false) } // Tracks if animation has run
-
-               LaunchedEffect(albumList.isNotEmpty()) {
-                  if (!hasAnimated && albumList.isEmpty()) {
-                     hasAnimated = true
-                     while (true) {
-                        fabScale = 1.2f
-                        delay(500)
-                        fabScale = 1f
-                        delay(500)
-                     }
-                  }
-               }
-
                FloatingActionButton(
                   onClick = { showAddAlbumDialog = true },
-                  containerColor = Color(0xFF8A48E1),
-                  modifier = Modifier.scale(fabScale) // Apply scale animation
+                  containerColor = Color(0xFF8A48E1)
                ) {
-                  Icon(imageVector = Icons.Default.Add, contentDescription = "Add Vinyl",
-                     tint = MaterialTheme.colorScheme.onPrimary)
+                  Icon(imageVector = Icons.Default.Add, contentDescription = "Add Vinyl", tint = MaterialTheme.colorScheme.onPrimary)
                }
             }
          )
@@ -170,63 +161,95 @@ fun PizzaPartyScreen(navController: NavController, vinylCollectionViewModel: Vin
       Column(
          modifier = Modifier
             .padding(innerPadding)
-            .padding(10.dp)
             .fillMaxSize(),
          verticalArrangement = Arrangement.Center,
          horizontalAlignment = Alignment.CenterHorizontally
       ) {
-         if (albumList.isEmpty()) {
-            // Show empty state message if no albums
-            Text(
-               text = "Wow, it's empty in here...",
-               style = MaterialTheme.typography.headlineSmall,
-               modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-               text = "Let's start building your collection!",
-               style = MaterialTheme.typography.bodyLarge
-            )
+         if (filteredAlbums.isEmpty() && searchQuery.isNotBlank()) {
+            Text("No matching albums found", style = MaterialTheme.typography.headlineSmall)
+         } else if (albumList.isEmpty()) {
+            Text("Wow, it's empty in here...", style = MaterialTheme.typography.headlineSmall)
+            Text("Let's start building your collection!", style = MaterialTheme.typography.bodyLarge)
          } else {
-            VinylCollectionGrid(albums = albumList, onDeleteAlbum = { vinylCollectionViewModel.deleteAlbum(it) })
+            VinylCollectionGrid(albums = filteredAlbums, onDeleteAlbum = { vinylCollectionViewModel.deleteAlbum(it) })
          }
       }
    }
 
+   // Bottom sheet menu
    if (showBottomSheet) {
       ModalBottomSheet(
          onDismissRequest = { showBottomSheet = false }
       ) {
          Column {
             ListItem(
-               headlineContent = { Text("Wishlist") },
                leadingContent = { Icon(Icons.Default.List, contentDescription = "Wishlist") },
-               modifier = Modifier.clickable { /* Handle Wishlist */ }
+               headlineContent = { Text("Wishlist") },
+               modifier = Modifier.clickable { /* Navigate to Wishlist */ }
             )
             ListItem(
-               headlineContent = { Text("Statistics") },
                leadingContent = { Icon(Icons.Default.Info, contentDescription = "Statistics") },
-               modifier = Modifier.clickable {
-                  showBottomSheet = false
-                  navController.navigate("stats")
-               }
+               headlineContent = { Text("Statistics") },
+               modifier = Modifier.clickable { navController.navigate("stats") }
             )
             ListItem(
-               headlineContent = { Text("Settings") },
                leadingContent = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+               headlineContent = { Text("Settings") },
                modifier = Modifier.clickable {
-                  showBottomSheet = false
                   navController.navigate("settings")
+                  showBottomSheet = false
                }
             )
          }
       }
    }
 
+   // Search bar
+   if (isSearching) {
+      Box(
+         modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f)) // Darken background
+            .clickable { isSearching = false; focusManager.clearFocus() } // Click outside to dismiss
+      ) {
+         Surface(
+            modifier = Modifier
+               .fillMaxWidth()
+               .align(Alignment.BottomCenter),
+            shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+            tonalElevation = 8.dp
+         ) {
+            Row(
+               verticalAlignment = Alignment.CenterVertically,
+               modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+               Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+               Spacer(modifier = Modifier.width(8.dp))
+               TextField(
+                  value = searchQuery,
+                  onValueChange = { searchQuery = it },
+                  placeholder = { Text("Search..") },
+                  singleLine = true,
+                  modifier = Modifier
+                     .weight(1f)
+                     .focusable(true)
+               )
+               Spacer(modifier = Modifier.width(8.dp))
+               IconButton(onClick = { isSearching = false; focusManager.clearFocus() }) {
+                  Icon(imageVector = Icons.Default.Close, contentDescription = "Close Search")
+               }
+            }
+         }
+      }
+   }
+
+   // Add album
    if (showAddAlbumDialog) {
       AddAlbumDialog(
          onDismiss = { showAddAlbumDialog = false },
          onAddAlbum = { newAlbum ->
             vinylCollectionViewModel.addAlbum(newAlbum)
+            showAddAlbumDialog = false
          }
       )
    }
@@ -240,7 +263,6 @@ fun HomeScreenPreview() {
       PizzaPartyScreen(navController)
    }
 }
-
 
 @Composable
 fun VinylCollectionGrid(albums: List<Album>, onDeleteAlbum: (Album) -> Unit) {
@@ -408,7 +430,6 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: (Album) -> 
       )
    }
 }
-
 
 @Composable
 fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
