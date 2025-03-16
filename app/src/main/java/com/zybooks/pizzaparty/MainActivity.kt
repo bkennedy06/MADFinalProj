@@ -78,6 +78,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.Image
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import coil.compose.AsyncImage
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,7 +100,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
    val navController = rememberNavController()
-   val vinylCollectionViewModel: VinylCollectionViewModel = viewModel() // Shared ViewModel
+   val vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
    val discogsViewModel: DiscogsViewModel = viewModel()
 
    NavHost(navController = navController, startDestination = "home") {
@@ -110,7 +114,8 @@ fun MainScreen() {
 @Composable
 fun PizzaPartyScreen(
    navController: NavController,
-   vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
+   vinylCollectionViewModel: VinylCollectionViewModel = viewModel(),
+   discogsViewModel: DiscogsViewModel = viewModel()
 ) {
    val albumList by vinylCollectionViewModel.albumList
    var showBottomSheet by remember { mutableStateOf(false) }
@@ -251,9 +256,11 @@ fun PizzaPartyScreen(
          onAddAlbum = { newAlbum ->
             vinylCollectionViewModel.addAlbum(newAlbum)
             showAddAlbumDialog = false
-         }
+         },
+         discogsViewModel = discogsViewModel
       )
    }
+
 }
 
 @Preview(showBackground = true)
@@ -281,7 +288,7 @@ fun VinylCollectionGrid(albums: List<Album>, onDeleteAlbum: (Album) -> Unit) {
             VinylDetailsPopup(
                album = album,
                onDismiss = { showDialog = false },
-               onDelete = { onDeleteAlbum(it) }
+               onDelete = { onDeleteAlbum(album) }
             )
          }
       }
@@ -290,152 +297,96 @@ fun VinylCollectionGrid(albums: List<Album>, onDeleteAlbum: (Album) -> Unit) {
 
 @Composable
 fun VinylItem(album: Album, onClick: () -> Unit) {
-   val context = LocalContext.current
-
-   val bitmap = remember(album.imageUri) {
-      album.imageUri.takeIf { it.isNotEmpty() }?.let { uriString ->
-         val uri = Uri.parse(uriString)
-         if (Build.VERSION.SDK_INT < 28) {
-            @Suppress("DEPRECATION")
-            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-         } else {
-            val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source)
-         }
-      }
-   }
-
    Card(
       modifier = Modifier
          .padding(8.dp)
          .fillMaxWidth()
-         .aspectRatio(1f)
          .clickable { onClick() },
-      shape = RoundedCornerShape(12.dp),
+      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
    ) {
-      Column(
-         modifier = Modifier.fillMaxSize(),
-         horizontalAlignment = Alignment.CenterHorizontally
-      ) {
-         bitmap?.let {
-            Image(
-               bitmap = it.asImageBitmap(),
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+         AsyncImage(
+            model = album.imageUri,
+            contentDescription = "Album Cover",
+            modifier = Modifier
+               .fillMaxWidth()
+               .aspectRatio(1f)
+               .clip(RoundedCornerShape(8.dp))
+               .background(Color.Gray), // neutral background if empty
+            contentScale = ContentScale.Crop
+         )
+
+         Spacer(modifier = Modifier.height(8.dp))
+         Text(text = album.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
+         Text(text = album.artist, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+      }
+   }
+}
+
+@Composable
+fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: () -> Unit) {
+   var showConfirmDelete by remember { mutableStateOf(false) }
+
+   if (showConfirmDelete) {
+      AlertDialog(
+         onDismissRequest = { showConfirmDelete = false },
+         title = { Text("Confirm Deletion") },
+         text = { Text("Are you sure you want to delete '${album.name}'?") },
+         confirmButton = {
+            Button(onClick = {
+               onDelete() // Delete album
+               showConfirmDelete = false
+               onDismiss() // Close popup
+            }) { Text("Delete") }
+         },
+         dismissButton = {
+            Button(onClick = { showConfirmDelete = false }) {
+               Text("Cancel")
+            }
+         }
+      )
+   }
+
+   AlertDialog(
+      onDismissRequest = { onDismiss() },
+      confirmButton = {
+         Button(onClick = { showConfirmDelete = true }) {
+            Text("Delete")
+         }
+      },
+      title = {
+         Text(text = album.name)
+      },
+      text = {
+         Column {
+            AsyncImage(
+               model = album.imageUri,
                contentDescription = "Album Cover",
                modifier = Modifier
                   .fillMaxWidth()
                   .aspectRatio(1f)
-                  .clip(RoundedCornerShape(12.dp)),
+                  .clip(RoundedCornerShape(8.dp))
+                  .background(Color.Gray), // Simple background if no image
                contentScale = ContentScale.Crop
             )
-         } ?: Image(
-            painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder
-            contentDescription = "Placeholder Album Cover",
-            modifier = Modifier
-               .fillMaxWidth()
-               .aspectRatio(1f)
-               .clip(RoundedCornerShape(12.dp))
-         )
-         Spacer(modifier = Modifier.height(8.dp))
-         Text(
-            text = album.name,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(8.dp)
-         )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Artist: ${album.artist}")
+            Text("Year: ${album.releaseYear}")
+            Text("Genre: ${album.genre}")
+            //Text("Market Value: ${album.marketValue ?: "N/A"}")
+         }
       }
-   }
+   )
 }
 
-@Composable
-fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: (Album) -> Unit) {
-   val context = LocalContext.current
-   var showDeleteDialog by remember { mutableStateOf(false) }
 
-   val bitmap = remember(album.imageUri) {
-      album.imageUri.takeIf { it.isNotEmpty() }?.let { uriString ->
-         val uri = Uri.parse(uriString)
-         if (Build.VERSION.SDK_INT < 28) {
-            @Suppress("DEPRECATION")
-            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-         } else {
-            val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source)
-         }
-      }
-   }
-
-   Dialog(onDismissRequest = { onDismiss() }) {
-      Surface(
-         shape = RoundedCornerShape(16.dp),
-         color = MaterialTheme.colorScheme.surface,
-         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-      ) {
-         Column(
-            modifier = Modifier
-               .fillMaxWidth()
-               .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-         ) {
-            bitmap?.let {
-               Image(
-                  bitmap = it.asImageBitmap(),
-                  contentDescription = "Album Cover",
-                  modifier = Modifier
-                     .fillMaxWidth()
-                     .aspectRatio(1f)
-                     .clip(RoundedCornerShape(12.dp)),
-                  contentScale = ContentScale.Crop
-               )
-            } ?: Image(
-               painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-               contentDescription = "Placeholder Album Cover",
-               modifier = Modifier
-                  .fillMaxWidth()
-                  .aspectRatio(1f)
-                  .clip(RoundedCornerShape(12.dp))
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = album.name, style = MaterialTheme.typography.headlineSmall)
-            Text(text = "Artist: ${album.artist}", style = MaterialTheme.typography.bodyLarge)
-            Text(text = "Release Year: ${album.releaseYear}", style = MaterialTheme.typography.bodyLarge)
-            Text(text = "Genre: ${album.genre}", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-               Button(onClick = { onDismiss() }) {
-                  Text("Close")
-               }
-               Button(
-                  onClick = { showDeleteDialog = true },
-                  colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-               ) {
-                  Text("Delete")
-               }
-            }
-         }
-      }
-   }
-
-   // Confirmation Dialog
-   if (showDeleteDialog) {
-      DeleteConfirmationDialog(
-         album = album,
-         onDismiss = { showDeleteDialog = false },
-         onConfirmDelete = {
-            onDelete(album)
-            showDeleteDialog = false
-            onDismiss()
-         }
-      )
-   }
-}
 
 @Composable
 fun AddAlbumDialog(
    onDismiss: () -> Unit,
-   onAddAlbum: (Album) -> Unit
+   onAddAlbum: (Album) -> Unit,
+   discogsViewModel: DiscogsViewModel
 ) {
    // Input states
    var albumName by remember { mutableStateOf("") }
@@ -445,20 +396,8 @@ fun AddAlbumDialog(
    var albumCoverUri by remember { mutableStateOf<Uri?>(null) }
    var showSuggestions by remember { mutableStateOf(false) } // For dropdown
    val context = LocalContext.current
-
-   // Mock album list (temporary before API)
-   val mockAlbumList = listOf(
-      Album("Thriller", "Michael Jackson", "1982", "Pop", ""),
-      Album("Back in Black", "AC/DC", "1980", "Rock", ""),
-      Album("Fearless", "Taylor Swift", "2008", "Country", ""),
-      Album("Abbey Road", "The Beatles", "1969", "Rock", ""),
-      Album("Random Access Memories", "Daft Punk", "2013", "Electronic", "")
-   )
-
-   // Filtered results for dropdown
-   val filteredAlbums = mockAlbumList.filter {
-      it.name.contains(albumName, ignoreCase = true)
-   }
+   var albumCoverUrl by remember { mutableStateOf("") } // For API image
+   val searchResults = discogsViewModel.searchResults.value
 
    // Image picker
    val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -481,7 +420,11 @@ fun AddAlbumDialog(
                   value = albumName,
                   onValueChange = {
                      albumName = it
-                     showSuggestions = it.isNotBlank() // Show suggestions when text is typed
+                     if (it.isNotBlank()) {
+                        discogsViewModel.searchAlbums(it) // Live API call
+                     } else {
+                        discogsViewModel.clearResults() // Clear results if input is empty
+                     }
                   },
                   label = { Text("Title") },
                   singleLine = true,
@@ -495,24 +438,30 @@ fun AddAlbumDialog(
                )
 
                // Dropdown suggestions
-               if (showSuggestions && filteredAlbums.isNotEmpty()) {
+               if (searchResults.isNotEmpty()) {
                   Column(
                      modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clip(RoundedCornerShape(8.dp))
                   ) {
-                     filteredAlbums.forEach { album ->
+                     searchResults.forEach { album ->
                         Text(
-                           text = album.name,
+                           text = album.title ?: "Unknown",
                            modifier = Modifier
                               .clickable {
+                                 // Split title to get artist and album title
+                                 val (parsedArtist, parsedTitle) = splitTitle(album.title)
+
                                  // Autofill fields
-                                 albumName = album.name
-                                 artist = album.artist
-                                 releaseYear = album.releaseYear
-                                 genre = album.genre
-                                 showSuggestions = false // Hide dropdown
+                                 albumName = parsedTitle
+                                 artist = parsedArtist
+                                 releaseYear = album.year ?: ""
+                                 genre = album.genre?.joinToString(", ") ?: ""
+
+                                 albumCoverUrl = album.coverImage ?: ""
+
+                                 discogsViewModel.clearResults() // Clear suggestions after selection
                               }
                               .padding(8.dp)
                         )
@@ -577,7 +526,15 @@ fun AddAlbumDialog(
                Button(onClick = { onDismiss() }) { Text("Cancel") }
                Button(onClick = {
                   if (albumName.isNotBlank()) {
-                     onAddAlbum(Album(albumName, artist, releaseYear, genre, albumCoverUri?.toString() ?: ""))
+                     onAddAlbum(
+                        Album(
+                           name = albumName,
+                           artist = artist,
+                           releaseYear = releaseYear,
+                           genre = genre,
+                           imageUri = albumCoverUrl
+                        )
+                     )
                      onDismiss()
                   }
                }) { Text("Add") }
@@ -585,6 +542,16 @@ fun AddAlbumDialog(
          }
       }
    }
+}
+
+fun splitTitle(title: String?): Pair<String, String> { // Helper for getting title and artist
+   if (title.isNullOrEmpty()) return "" to ""
+
+   val parts = title.split(" - ", limit = 2)
+   val artist = parts.getOrNull(0)?.trim() ?: ""
+   val albumTitle = parts.getOrNull(1)?.trim() ?: title // Fall back to whole title if no split found
+
+   return artist to albumTitle
 }
 
 
