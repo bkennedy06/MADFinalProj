@@ -97,6 +97,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
    val navController = rememberNavController()
    val vinylCollectionViewModel: VinylCollectionViewModel = viewModel() // Shared ViewModel
+   val discogsViewModel: DiscogsViewModel = viewModel()
 
    NavHost(navController = navController, startDestination = "home") {
       composable("home") { PizzaPartyScreen(navController, vinylCollectionViewModel) }
