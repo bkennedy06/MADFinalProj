@@ -135,7 +135,7 @@ fun PizzaPartyScreen(
             },
             actions = {
                IconButton(onClick = { navController.navigate("settings") }) {
-                  Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile")
+                  Icon(imageVector = Icons.Default.Settings, contentDescription = "Profile")
                }
             }
          )
@@ -432,19 +432,37 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: (Album) -> 
 }
 
 @Composable
-fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
+fun AddAlbumDialog(
+   onDismiss: () -> Unit,
+   onAddAlbum: (Album) -> Unit
+) {
+   // Input states
    var albumName by remember { mutableStateOf("") }
    var artist by remember { mutableStateOf("") }
    var releaseYear by remember { mutableStateOf("") }
    var genre by remember { mutableStateOf("") }
    var albumCoverUri by remember { mutableStateOf<Uri?>(null) }
+   var showSuggestions by remember { mutableStateOf(false) } // For dropdown
    val context = LocalContext.current
 
+   // Mock album list (temporary before API)
+   val mockAlbumList = listOf(
+      Album("Thriller", "Michael Jackson", "1982", "Pop", ""),
+      Album("Back in Black", "AC/DC", "1980", "Rock", ""),
+      Album("Fearless", "Taylor Swift", "2008", "Country", ""),
+      Album("Abbey Road", "The Beatles", "1969", "Rock", ""),
+      Album("Random Access Memories", "Daft Punk", "2013", "Electronic", "")
+   )
+
+   // Filtered results for dropdown
+   val filteredAlbums = mockAlbumList.filter {
+      it.name.contains(albumName, ignoreCase = true)
+   }
+
+   // Image picker
    val imagePickerLauncher = rememberLauncherForActivityResult(
       contract = ActivityResultContracts.GetContent()
-   ) { uri: Uri? ->
-      albumCoverUri = uri
-   }
+   ) { uri: Uri? -> albumCoverUri = uri }
 
    Dialog(onDismissRequest = { onDismiss() }) {
       Surface(
@@ -452,28 +470,70 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
          color = MaterialTheme.colorScheme.surface,
          modifier = Modifier.padding(16.dp)
       ) {
-         Column(
-            modifier = Modifier.padding(16.dp)
-         ) {
+         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = "Add Entry", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            // Album Title (Searchable)
+            Column {
+               TextField(
+                  value = albumName,
+                  onValueChange = {
+                     albumName = it
+                     showSuggestions = it.isNotBlank() // Show suggestions when text is typed
+                  },
+                  label = { Text("Title") },
+                  singleLine = true,
+                  modifier = Modifier.fillMaxWidth(),
+                  trailingIcon = {
+                     Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search Album"
+                     )
+                  }
+               )
+
+               // Dropdown suggestions
+               if (showSuggestions && filteredAlbums.isNotEmpty()) {
+                  Column(
+                     modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clip(RoundedCornerShape(8.dp))
+                  ) {
+                     filteredAlbums.forEach { album ->
+                        Text(
+                           text = album.name,
+                           modifier = Modifier
+                              .clickable {
+                                 // Autofill fields
+                                 albumName = album.name
+                                 artist = album.artist
+                                 releaseYear = album.releaseYear
+                                 genre = album.genre
+                                 showSuggestions = false // Hide dropdown
+                              }
+                              .padding(8.dp)
+                        )
+                     }
+                  }
+               }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Other fields
             TextField(value = artist, onValueChange = { artist = it }, label = { Text("Artist") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-
             TextField(value = releaseYear, onValueChange = { releaseYear = it }, label = { Text("Release Year") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-
             TextField(value = genre, onValueChange = { genre = it }, label = { Text("Genre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Image Selection Row
+            // Image selection
             Row(
-               modifier = Modifier.fillMaxWidth(),
-               verticalAlignment = Alignment.CenterVertically
+               verticalAlignment = Alignment.CenterVertically,
+               modifier = Modifier.fillMaxWidth()
             ) {
                IconButton(
                   onClick = { imagePickerLauncher.launch("image/*") },
@@ -482,10 +542,11 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
                      .clip(RoundedCornerShape(12.dp))
                      .background(MaterialTheme.colorScheme.primaryContainer)
                ) {
-                  Icon(imageVector = Icons.Default.Add, contentDescription = "Upload Album Cover", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                  Icon(imageVector = Icons.Default.Add, contentDescription = "Upload Cover", tint = MaterialTheme.colorScheme.onPrimaryContainer)
                }
                Spacer(modifier = Modifier.width(8.dp))
 
+               // Preview uploaded image
                albumCoverUri?.let { uri ->
                   val bitmap = remember(uri) {
                      if (Build.VERSION.SDK_INT < 28) {
@@ -510,23 +571,21 @@ fun AddAlbumDialog(onDismiss: () -> Unit, onAddAlbum: (Album) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Buttons
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-               Button(onClick = { onDismiss() }) {
-                  Text("Cancel")
-               }
+               Button(onClick = { onDismiss() }) { Text("Cancel") }
                Button(onClick = {
-                  if (albumName.isNotBlank() && albumCoverUri != null) {
-                     onAddAlbum(Album(albumName, artist, releaseYear, genre, albumCoverUri.toString()))
+                  if (albumName.isNotBlank()) {
+                     onAddAlbum(Album(albumName, artist, releaseYear, genre, albumCoverUri?.toString() ?: ""))
                      onDismiss()
                   }
-               }) {
-                  Text("Add")
-               }
+               }) { Text("Add") }
             }
          }
       }
    }
 }
+
 
 @Composable
 fun DeleteConfirmationDialog(album: Album, onDismiss: () -> Unit, onConfirmDelete: () -> Unit) {
