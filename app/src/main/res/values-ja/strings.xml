@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Record Keeper</string>
+    <string name="collection_title">コレクション</string>
+    <string name="empty_collection_message">わぁ、ここは空っぽです…</string>
+    <string name="empty_collection_subtext">コレクションを作り始めましょう！</string>
+    <string name="add_entry">アルバム追加</string>
+    <string name="cancel">キャンセル</string>
+    <string name="add">追加</string>
+    <string name="upload_cover">カバーをアップロード</string>
+    <string name="search_album">アルバム検索</string>
+    <string name="title">タイトル</string>
+    <string name="artist">アーティスト</string>
+    <string name="release_year">発売年</string>
+    <string name="genre">ジャンル</string>
+    <string name="statistics">統計</string>
+    <string name="total_albums">アルバム合計: %1$d</string>
+    <string name="total_artists">アーティスト合計: %1$d</string>
+    <string name="most_owned_artist">最多所有アーティスト: %1$s</string>
+    <string name="total_market_value">総市場価値: $%1$.2f</string>
+    <string name="oldest_album">最古のアルバム: %1$s</string>
+    <string name="most_expensive_album">最も高価なアルバム: %1$s ($%2$.2f)</string>
+    <string name="dark_mode">ダークモード</string>
+    <string name="language">言語: %1$s</string>
+</resources>

@@ -481,7 +481,6 @@ fun AddAlbumDialog(
             TextField(value = genre, onValueChange = { genre = it }, label = { Text("Genre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Image selection
             // Image selection and preview
             Row(
                verticalAlignment = Alignment.CenterVertically,
@@ -501,7 +500,6 @@ fun AddAlbumDialog(
                      tint = MaterialTheme.colorScheme.onPrimaryContainer
                   )
                }
-
                Spacer(modifier = Modifier.width(8.dp))
 
                // Preview either user-uploaded image or Discogs image
@@ -530,13 +528,14 @@ fun AddAlbumDialog(
                Button(onClick = { onDismiss() }) { Text("Cancel") }
                Button(onClick = {
                   if (albumName.isNotBlank()) {
+                     val finalImageUri = albumCoverUri?.toString() ?: albumCoverUrl // Use uploaded image if available, otherwise API image
                      onAddAlbum(
                         Album(
                            name = albumName,
                            artist = artist,
                            releaseYear = releaseYear,
                            genre = genre,
-                           imageUri = albumCoverUrl
+                           imageUri = finalImageUri // now dynamically chosen
                         )
                      )
                      onDismiss()

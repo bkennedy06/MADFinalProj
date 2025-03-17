@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">Record Keeper</string>
+    <string name="collection_title">Collection</string>
+    <string name="empty_collection_message">Wow, it\'s empty in here…</string>
+    <string name="empty_collection_subtext">Let\'s start building your collection!</string>
+    <string name="add_entry">Add Entry</string>
+    <string name="cancel">Cancel</string>
+    <string name="add">Add</string>
+    <string name="upload_cover">Upload Cover</string>
+    <string name="search_album">Search Album</string>
+    <string name="title">Title</string>
+    <string name="artist">Artist</string>
+    <string name="release_year">Release Year</string>
+    <string name="genre">Genre</string>
+    <string name="statistics">Statistics</string>
+    <string name="total_albums">Total Albums Owned: %1$d</string>
+    <string name="total_artists">Total Artists: %1$d</string>
+    <string name="most_owned_artist">Most Owned Artist: %1$s</string>
+    <string name="total_market_value">Total Market Value: $%1$.2f</string>
+    <string name="oldest_album">Oldest Album: %1$s</string>
+    <string name="most_expensive_album">Most Expensive Album: %1$s ($%2$.2f)</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="language">Language: %1$s</string>
 </resources>

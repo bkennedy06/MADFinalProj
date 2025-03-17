@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Record Keeper</string>
+    <string name="collection_title">Collection</string>
+    <string name="empty_collection_message">Oh, c\'est vide ici…</string>
+    <string name="empty_collection_subtext">Commençons à construire votre collection !</string>
+    <string name="add_entry">Ajouter un album</string>
+    <string name="cancel">Annuler</string>
+    <string name="add">Ajouter</string>
+    <string name="upload_cover">Télécharger la couverture</string>
+    <string name="search_album">Rechercher un album</string>
+    <string name="title">Titre</string>
+    <string name="artist">Artiste</string>
+    <string name="release_year">Année de sortie</string>
+    <string name="genre">Genre</string>
+    <string name="statistics">Statistiques</string>
+    <string name="total_albums">Total d\'albums : %1$d</string>
+    <string name="total_artists">Total d\'artistes : %1$d</string>
+    <string name="most_owned_artist">Artiste le plus possédé : %1$s</string>
+    <string name="total_market_value">Valeur totale : $%1$.2f</string>
+    <string name="oldest_album">Album le plus ancien : %1$s</string>
+    <string name="most_expensive_album">Album le plus cher : %1$s ($%2$.2f)</string>
+    <string name="dark_mode">Mode sombre</string>
+    <string name="language">Langue : %1$s</string>
+</resources>

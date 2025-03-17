@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Record Keeper</string>
+    <string name="collection_title">컬렉션</string>
+    <string name="empty_collection_message">와, 여긴 비어 있어요…</string>
+    <string name="empty_collection_subtext">컬렉션을 시작해 보세요!</string>
+    <string name="add_entry">앨범 추가</string>
+    <string name="cancel">취소</string>
+    <string name="add">추가</string>
+    <string name="upload_cover">커버 업로드</string>
+    <string name="search_album">앨범 검색</string>
+    <string name="title">제목</string>
+    <string name="artist">아티스트</string>
+    <string name="release_year">발매년도</string>
+    <string name="genre">장르</string>
+    <string name="statistics">통계</string>
+    <string name="total_albums">총 앨범 수: %1$d</string>
+    <string name="total_artists">총 아티스트 수: %1$d</string>
+    <string name="most_owned_artist">가장 많이 소장한 아티스트: %1$s</string>
+    <string name="total_market_value">총 가치: $%1$.2f</string>
+    <string name="oldest_album">가장 오래된 앨범: %1$s</string>
+    <string name="most_expensive_album">가장 비싼 앨범: %1$s ($%2$.2f)</string>
+    <string name="dark_mode">다크 모드</string>
+    <string name="language">언어: %1$s</string>
+</resources>
