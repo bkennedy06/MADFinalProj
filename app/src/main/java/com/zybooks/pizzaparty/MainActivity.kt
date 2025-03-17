@@ -79,6 +79,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import coil.compose.AsyncImage
@@ -481,10 +482,12 @@ fun AddAlbumDialog(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Image selection
+            // Image selection and preview
             Row(
                verticalAlignment = Alignment.CenterVertically,
                modifier = Modifier.fillMaxWidth()
             ) {
+               // Button to upload or replace the image
                IconButton(
                   onClick = { imagePickerLauncher.launch("image/*") },
                   modifier = Modifier
@@ -492,32 +495,33 @@ fun AddAlbumDialog(
                      .clip(RoundedCornerShape(12.dp))
                      .background(MaterialTheme.colorScheme.primaryContainer)
                ) {
-                  Icon(imageVector = Icons.Default.Add, contentDescription = "Upload Cover", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                  Icon(
+                     imageVector = Icons.Default.Add,
+                     contentDescription = "Upload Cover",
+                     tint = MaterialTheme.colorScheme.onPrimaryContainer
+                  )
                }
+
                Spacer(modifier = Modifier.width(8.dp))
 
-               // Preview uploaded image
-               albumCoverUri?.let { uri ->
-                  val bitmap = remember(uri) {
-                     if (Build.VERSION.SDK_INT < 28) {
-                        @Suppress("DEPRECATION")
-                        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-                     } else {
-                        val source = ImageDecoder.createSource(context.contentResolver, uri)
-                        ImageDecoder.decodeBitmap(source)
-                     }
-                  }
+               // Preview either user-uploaded image or Discogs image
+               val previewImage = albumCoverUri?.let { uri -> uri } ?: albumCoverUrl.takeIf { it.isNotBlank() }
 
-                  Image(
-                     bitmap = bitmap.asImageBitmap(),
-                     contentDescription = "Selected Image",
+               if (previewImage != null) {
+                  AsyncImage(
+                     model = previewImage,
+                     contentDescription = "Album Cover Preview",
                      modifier = Modifier
-                        .size(50.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
                      contentScale = ContentScale.Crop
                   )
-               } ?: Text(text = "Upload Cover", style = MaterialTheme.typography.bodyLarge)
+               } else {
+                  Text(text = "Upload Cover", style = MaterialTheme.typography.bodyLarge)
+               }
             }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
