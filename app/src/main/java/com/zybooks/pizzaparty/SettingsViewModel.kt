@@ -32,22 +32,55 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.ui.text.style.LineBreak
+import android.app.Application
+import android.content.res.Configuration
+import androidx.lifecycle.AndroidViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.ViewModelProvider
+import java.util.Locale
 
-class SettingsViewModel : ViewModel() {
-    private val _selectedLanguage = mutableStateOf("English")
-    val selectedLanguage: State<String> = _selectedLanguage
+class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
+    // Dark Mode State
     private val _isDarkMode = mutableStateOf(false)
     val isDarkMode: State<Boolean> = _isDarkMode
 
-    fun setLanguage(language: String) {
-        _selectedLanguage.value = language
-    }
+    // Language Selection State
+    private val _selectedLanguage = mutableStateOf("English") // Default
+    val selectedLanguage: State<String> = _selectedLanguage
 
+    // Toggle Dark Mode
     fun toggleDarkMode() {
         _isDarkMode.value = !_isDarkMode.value
     }
 
+    // Set Language and update locale
+    fun setLanguage(language: String) {
+        _selectedLanguage.value = language
+        updateLocale(language)
+    }
+
+    // Method to update app locale
+    private fun updateLocale(language: String) {
+        val locale = when (language) {
+            "German" -> Locale.GERMAN
+            "Japanese" -> Locale.JAPANESE
+            "French" -> Locale.FRENCH
+            "Korean" -> Locale.KOREAN
+            else -> Locale.ENGLISH
+        }
+
+        // Update configuration
+        Locale.setDefault(locale)
+        val config = Configuration(getApplication<Application>().resources.configuration)
+        config.setLocale(locale)
+        getApplication<Application>().resources.updateConfiguration(
+            config,
+            getApplication<Application>().resources.displayMetrics
+        )
+    }
 }
 
 
@@ -57,11 +90,15 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
     val isDarkMode by settingsViewModel.isDarkMode
     val selectedLanguage by settingsViewModel.selectedLanguage
     var showLanguageSelector = remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val settingsViewModel: SettingsViewModel = viewModel(
+        factory = SettingsViewModelFactory(context.applicationContext as Application)
+    )
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Settings") },
+                title = { Text(text = stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -82,7 +119,7 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Dark Mode", modifier = Modifier.weight(1f))
+                Text(text = stringResource(R.string.dark_mode), modifier = Modifier.weight(1f))
                 Switch(
                     checked = isDarkMode,
                     onCheckedChange = { settingsViewModel.toggleDarkMode() })
@@ -97,7 +134,7 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Language: $selectedLanguage", modifier = Modifier.weight(1f))
+                    Text(text = stringResource(R.string.language, selectedLanguage), modifier = Modifier.weight(1f))
                     Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
                 }
             }
@@ -136,7 +173,7 @@ fun LanguageSelectionSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text("Select Language", style = MaterialTheme.typography.headlineSmall)
+            Text(text = stringResource(R.string.select_language), style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn {

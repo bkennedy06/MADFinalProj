@@ -14,12 +14,23 @@
     <string name="release_year">Année de sortie</string>
     <string name="genre">Genre</string>
     <string name="statistics">Statistiques</string>
-    <string name="total_albums">Total d\'albums : %1$d</string>
-    <string name="total_artists">Total d\'artistes : %1$d</string>
+    <string name="wishlist">Liste de souhaits</string>
+    <string name="settings">Paramètres</string>
+    <string name="search_text">Recherche…</string>
+    <string name="deletion_confirm">Confirmer la suppression</string>
+    <string name="confirm_delete_album">Êtes-vous sûr de vouloir supprimer %1$s ?</string>
+    <string name="total_albums">Total d\'albums : %1$s</string>
+    <string name="total_artists">Total d\'artistes : %1$s</string>
     <string name="most_owned_artist">Artiste le plus possédé : %1$s</string>
-    <string name="total_market_value">Valeur totale : $%1$.2f</string>
+    <string name="total_market_value">Valeur totale : %1$s</string>
     <string name="oldest_album">Album le plus ancien : %1$s</string>
-    <string name="most_expensive_album">Album le plus cher : %1$s ($%2$.2f)</string>
+    <string name="most_expensive_album">Album le plus cher : %1$s</string>
     <string name="dark_mode">Mode sombre</string>
     <string name="language">Langue : %1$s</string>
+    <string name="delete">Supprimer</string>
+    <string name="select_language">Choisir la langue</string>
+    <string name="unknown">Inconnu</string>
+    <string name="artistVar">Artiste : %1$s ?</string>
+    <string name="yearVar">Année : %1$s ?</string>
+    <string name="genreVar">Genre : %1$s ?</string>
 </resources>

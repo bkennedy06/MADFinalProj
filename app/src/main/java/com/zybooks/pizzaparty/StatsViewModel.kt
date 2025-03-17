@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -53,7 +54,7 @@ fun StatsScreen(navController: NavController, statsViewModel: StatsViewModel = v
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Statistics") },
+                title = { Text(text = stringResource(R.string.statistics)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -69,16 +70,15 @@ fun StatsScreen(navController: NavController, statsViewModel: StatsViewModel = v
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatsRow("Total Albums Owned: ${statsViewModel.totalAlbums.value}")
-            StatsRow("Total Artists: ${statsViewModel.totalArtists.value}")
-            StatsRow("Most Owned Artist: ${statsViewModel.mostOwnedArtist.value}")
-            StatsRow("Total Market Value: $${statsViewModel.totalMarketValue.value}")
-            StatsRow("Oldest Album: ${statsViewModel.oldestAlbum.value}")
-            StatsRow("Most Expensive Album: ${statsViewModel.mostExpensiveAlbum.value}")
+            StatsRow(stringResource(R.string.total_albums, statsViewModel.totalAlbums.value))
+            StatsRow(stringResource(R.string.total_artists, statsViewModel.totalArtists.value))
+            StatsRow(stringResource(R.string.most_owned_artist, statsViewModel.mostOwnedArtist.value))
+            StatsRow(stringResource(R.string.total_market_value, statsViewModel.totalMarketValue.value))
+            StatsRow(stringResource(R.string.oldest_album, statsViewModel.oldestAlbum.value))
+            StatsRow(stringResource(R.string.most_expensive_album, statsViewModel.mostExpensiveAlbum.value))
         }
     }
 }
-
 
 @Composable
 fun StatsRow(label: String) {

@@ -82,6 +82,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
 
 class MainActivity : ComponentActivity() {
@@ -134,7 +135,7 @@ fun PizzaPartyScreen(
    Scaffold(
       topBar = {
          CenterAlignedTopAppBar(
-            title = { Text(text = "Collection") },
+            title = { Text(text = stringResource(R.string.collection_title)) },
             navigationIcon = {
                IconButton(onClick = { showBottomSheet = true }) {
                   Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
@@ -175,8 +176,8 @@ fun PizzaPartyScreen(
          if (filteredAlbums.isEmpty() && searchQuery.isNotBlank()) {
             Text("No matching albums found", style = MaterialTheme.typography.headlineSmall)
          } else if (albumList.isEmpty()) {
-            Text("Wow, it's empty in here...", style = MaterialTheme.typography.headlineSmall)
-            Text("Let's start building your collection!", style = MaterialTheme.typography.bodyLarge)
+            Text(text = stringResource(R.string.empty_collection_message), style = MaterialTheme.typography.headlineSmall)
+            Text(text = stringResource(R.string.empty_collection_subtext), style = MaterialTheme.typography.bodyLarge)
          } else {
             VinylCollectionGrid(albums = filteredAlbums, onDeleteAlbum = { vinylCollectionViewModel.deleteAlbum(it) })
          }
@@ -191,17 +192,17 @@ fun PizzaPartyScreen(
          Column {
             ListItem(
                leadingContent = { Icon(Icons.Default.List, contentDescription = "Wishlist") },
-               headlineContent = { Text("Wishlist") },
+               headlineContent = { Text(text = stringResource(R.string.wishlist)) },
                modifier = Modifier.clickable { /* Navigate to Wishlist */ }
             )
             ListItem(
                leadingContent = { Icon(Icons.Default.Info, contentDescription = "Statistics") },
-               headlineContent = { Text("Statistics") },
+               headlineContent = { Text(text = stringResource(R.string.statistics)) },
                modifier = Modifier.clickable { navController.navigate("stats") }
             )
             ListItem(
                leadingContent = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-               headlineContent = { Text("Settings") },
+               headlineContent = { Text(text = stringResource(R.string.settings)) },
                modifier = Modifier.clickable {
                   navController.navigate("settings")
                   showBottomSheet = false
@@ -235,7 +236,7 @@ fun PizzaPartyScreen(
                TextField(
                   value = searchQuery,
                   onValueChange = { searchQuery = it },
-                  placeholder = { Text("Search..") },
+                  placeholder = { Text(text = stringResource(R.string.search_text)) },
                   singleLine = true,
                   modifier = Modifier
                      .weight(1f)
@@ -332,18 +333,18 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: () -> Unit)
    if (showConfirmDelete) {
       AlertDialog(
          onDismissRequest = { showConfirmDelete = false },
-         title = { Text("Confirm Deletion") },
-         text = { Text("Are you sure you want to delete '${album.name}'?") },
+         title = { Text(text = stringResource(R.string.deletion_confirm)) },
+         text = { Text(text = stringResource(R.string.confirm_delete_album, album.name)) },
          confirmButton = {
             Button(onClick = {
                onDelete() // Delete album
                showConfirmDelete = false
                onDismiss() // Close popup
-            }) { Text("Delete") }
+            }) { Text(text = stringResource(R.string.delete)) }
          },
          dismissButton = {
             Button(onClick = { showConfirmDelete = false }) {
-               Text("Cancel")
+               Text(text = stringResource(R.string.cancel))
             }
          }
       )
@@ -353,7 +354,7 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: () -> Unit)
       onDismissRequest = { onDismiss() },
       confirmButton = {
          Button(onClick = { showConfirmDelete = true }) {
-            Text("Delete")
+            Text(text = stringResource(R.string.delete))
          }
       },
       title = {
@@ -372,16 +373,14 @@ fun VinylDetailsPopup(album: Album, onDismiss: () -> Unit, onDelete: () -> Unit)
                contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Artist: ${album.artist}")
-            Text("Year: ${album.releaseYear}")
-            Text("Genre: ${album.genre}")
+            Text(text = stringResource(R.string.artistVar, album.artist))
+            Text(text = stringResource(R.string.yearVar, album.releaseYear))
+            Text(text = stringResource(R.string.genreVar, album.genre))
             //Text("Market Value: ${album.marketValue ?: "N/A"}")
          }
       }
    )
 }
-
-
 
 @Composable
 fun AddAlbumDialog(
@@ -412,7 +411,7 @@ fun AddAlbumDialog(
          modifier = Modifier.padding(16.dp)
       ) {
          Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Add Entry", style = MaterialTheme.typography.headlineSmall)
+            Text(text = stringResource(R.string.add_entry), style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(8.dp))
 
             // Album Title (Searchable)
@@ -427,7 +426,7 @@ fun AddAlbumDialog(
                         discogsViewModel.clearResults() // Clear results if input is empty
                      }
                   },
-                  label = { Text("Title") },
+                  label = { Text(text = stringResource(R.string.title)) },
                   singleLine = true,
                   modifier = Modifier.fillMaxWidth(),
                   trailingIcon = {
@@ -448,7 +447,7 @@ fun AddAlbumDialog(
                   ) {
                      searchResults.forEach { album ->
                         Text(
-                           text = album.title ?: "Unknown",
+                           text = album.title ?: stringResource(R.string.unknown),
                            modifier = Modifier
                               .clickable {
                                  // Split title to get artist and album title
@@ -474,11 +473,11 @@ fun AddAlbumDialog(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Other fields
-            TextField(value = artist, onValueChange = { artist = it }, label = { Text("Artist") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextField(value = artist, onValueChange = { artist = it }, label = { Text(text = stringResource(R.string.artist)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = releaseYear, onValueChange = { releaseYear = it }, label = { Text("Release Year") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextField(value = releaseYear, onValueChange = { releaseYear = it }, label = { Text(text = stringResource(R.string.release_year)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = genre, onValueChange = { genre = it }, label = { Text("Genre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextField(value = genre, onValueChange = { genre = it }, label = { Text(text = stringResource(R.string.genre)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
 
             // Image selection and preview
@@ -516,7 +515,7 @@ fun AddAlbumDialog(
                      contentScale = ContentScale.Crop
                   )
                } else {
-                  Text(text = "Upload Cover", style = MaterialTheme.typography.bodyLarge)
+                  Text(text = stringResource(R.string.upload_cover), style = MaterialTheme.typography.bodyLarge)
                }
             }
 
@@ -525,7 +524,7 @@ fun AddAlbumDialog(
 
             // Buttons
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-               Button(onClick = { onDismiss() }) { Text("Cancel") }
+               Button(onClick = { onDismiss() }) { Text(text = stringResource(R.string.cancel)) }
                Button(onClick = {
                   if (albumName.isNotBlank()) {
                      val finalImageUri = albumCoverUri?.toString() ?: albumCoverUrl // Use uploaded image if available, otherwise API image
@@ -540,7 +539,7 @@ fun AddAlbumDialog(
                      )
                      onDismiss()
                   }
-               }) { Text("Add") }
+               }) { Text(text = stringResource(R.string.add)) }
             }
          }
       }
