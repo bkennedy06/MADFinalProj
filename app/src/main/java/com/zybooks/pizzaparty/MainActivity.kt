@@ -1,14 +1,11 @@
 package com.zybooks.pizzaparty
 
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +25,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
@@ -54,14 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import android.graphics.ImageDecoder
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.filled.Close
@@ -71,19 +64,20 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ListItem
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -398,6 +392,7 @@ fun AddAlbumDialog(
    var showSuggestions by remember { mutableStateOf(false) } // For dropdown
    val context = LocalContext.current
    var albumCoverUrl by remember { mutableStateOf("") } // For API image
+   var marketValue by remember { mutableDoubleStateOf(0.0) }
    val searchResults = discogsViewModel.searchResults.value
 
    // Image picker
@@ -461,8 +456,9 @@ fun AddAlbumDialog(
                                  genre = album.genre?.joinToString(", ") ?: ""
 
                                  albumCoverUrl = album.coverImage ?: ""
-
-                                 discogsViewModel.clearResults() // Clear suggestions after selection
+                                 marketValue = (album.lowestPrice ?: 0.0).toDouble()
+                                 //Log.d("MoneyDebug", "Market value: ${album.lowestPrice}")
+                                 discogsViewModel.clearResults()
                               }
                               .padding(8.dp)
                         )
@@ -474,11 +470,17 @@ fun AddAlbumDialog(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Other fields
-            TextField(value = artist, onValueChange = { artist = it }, label = { Text(text = stringResource(R.string.artist)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextField(value = artist, onValueChange = { artist = it },
+               label = { Text(text = stringResource(R.string.artist)) },
+               singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = releaseYear, onValueChange = { releaseYear = it }, label = { Text(text = stringResource(R.string.release_year)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextField(value = releaseYear, onValueChange = { releaseYear = it },
+               label = { Text(text = stringResource(R.string.release_year)) },
+               singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = genre, onValueChange = { genre = it }, label = { Text(text = stringResource(R.string.genre)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextField(value = genre, onValueChange = { genre = it },
+               label = { Text(text = stringResource(R.string.genre)) },
+               singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
 
             // Image selection and preview
@@ -520,7 +522,6 @@ fun AddAlbumDialog(
                }
             }
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Buttons
@@ -535,7 +536,8 @@ fun AddAlbumDialog(
                            artist = artist,
                            releaseYear = releaseYear,
                            genre = genre,
-                           imageUri = finalImageUri // now dynamically chosen
+                           imageUri = finalImageUri, // now dynamically chosen
+                           marketValue = marketValue
                         )
                      )
                      onDismiss()
@@ -557,43 +559,11 @@ fun splitTitle(title: String?): Pair<String, String> { // Helper for getting tit
    return artist to albumTitle
 }
 
-
-@Composable
-fun DeleteConfirmationDialog(album: Album, onDismiss: () -> Unit, onConfirmDelete: () -> Unit) {
-   Dialog(onDismissRequest = { onDismiss() }) {
-      Surface(
-         shape = RoundedCornerShape(16.dp),
-         color = MaterialTheme.colorScheme.surface,
-         modifier = Modifier.padding(16.dp)
-      ) {
-         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-         ) {
-            Text("Delete Album?", style = MaterialTheme.typography.headlineSmall)
-            Text("Are you sure you want to delete \"${album.name}\"?", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-               Button(onClick = { onDismiss() }) {
-                  Text("Cancel")
-               }
-               Button(
-                  onClick = { onConfirmDelete() },
-                  colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-               ) {
-                  Text("Delete")
-               }
-            }
-         }
-      }
-   }
-}
-
-
 data class Album(
    val name: String,
    val artist: String,
    val releaseYear: String,
    val genre: String,
-   val imageUri: String
+   val imageUri: String,
+   val marketValue: Double
 )

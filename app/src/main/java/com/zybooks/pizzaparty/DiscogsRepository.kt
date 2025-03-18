@@ -1,6 +1,7 @@
 package com.zybooks.pizzaparty
 
 import android.content.Context
+import android.util.Log
 
 class DiscogsRepository(private val context: Context) {
     private val apiKey = context.getString(R.string.discogs_api_key)
@@ -8,9 +9,13 @@ class DiscogsRepository(private val context: Context) {
 
     suspend fun searchAlbums(query: String): List<DiscogsAlbumResult> {
         return try {
-            RetrofitInstance.api.searchAlbums(query, apiKey = apiKey, apiSecret = apiSecret).results
+            val response = RetrofitInstance.api.searchAlbums(query, apiKey = apiKey, apiSecret = apiSecret)
+            Log.d("APIResponse", "Full Response: $response")
+            response.results
         } catch (e: Exception) {
-            emptyList() // Return empty list if error
+            //Log.e("APIError", "Failed to fetch albums: ${e.message}")
+            emptyList()
         }
     }
+
 }

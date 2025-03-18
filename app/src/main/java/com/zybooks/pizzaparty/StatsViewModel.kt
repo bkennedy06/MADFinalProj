@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -35,10 +36,10 @@ class StatsViewModel : ViewModel() {
     private val _totalArtists = mutableStateOf(0)
     val totalArtists: State<Int> = _totalArtists
 
-    private val _mostOwnedArtist = mutableStateOf("n/a")
+    private val _mostOwnedArtist = mutableStateOf("N/A")
     val mostOwnedArtist: State<String> = _mostOwnedArtist
 
-    private val _totalMarketValue = mutableStateOf(0.0)
+    private val _totalMarketValue = mutableDoubleStateOf(0.0)
     val totalMarketValue: State<Double> = _totalMarketValue
 
     private val _oldestAlbum = mutableStateOf("Unknown")
@@ -53,10 +54,18 @@ class StatsViewModel : ViewModel() {
 
         // Most Owned Artist
         val artistFrequency = albums.groupingBy { it.artist }.eachCount()
-        _mostOwnedArtist.value = artistFrequency.maxByOrNull { it.value }?.key ?: "n/a"
+        _mostOwnedArtist.value = artistFrequency.maxByOrNull { it.value }?.key ?: "N/A"
 
         // Oldest Album
         _oldestAlbum.value = albums.minByOrNull { it.releaseYear.toIntOrNull() ?: Int.MAX_VALUE }?.name ?: "Unknown"
+
+        // Calculate Market Value (Using API Price)
+        val totalMarket = albums.sumOf { it.marketValue }
+        val mostExpensive = albums.maxByOrNull { it.marketValue }
+
+        _totalMarketValue.doubleValue = totalMarket
+        _mostExpensiveAlbum.value =
+            mostExpensive?.let { "${it.name} ($${"%.2f".format(it.marketValue)})" } ?: "Unknown ($0.00)"
     }
 }
 
@@ -66,7 +75,7 @@ fun StatsScreen(
     navController: NavController,
     statsViewModel: StatsViewModel = viewModel(),
     vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
-    ){
+) {
     val albumList by vinylCollectionViewModel.albumList
 
     LaunchedEffect(albumList) {
@@ -99,7 +108,7 @@ fun StatsScreen(
             StatsRow(stringResource(R.string.total_albums, statsViewModel.totalAlbums.value))
             StatsRow(stringResource(R.string.total_artists, statsViewModel.totalArtists.value))
             StatsRow(stringResource(R.string.most_owned_artist, statsViewModel.mostOwnedArtist.value))
-            StatsRow(stringResource(R.string.total_market_value, statsViewModel.totalMarketValue.value))
+            StatsRow(stringResource(R.string.total_market_value, "%.2f".format(statsViewModel.totalMarketValue.value)))
             StatsRow(stringResource(R.string.oldest_album, statsViewModel.oldestAlbum.value))
             StatsRow(stringResource(R.string.most_expensive_album, statsViewModel.mostExpensiveAlbum.value))
         }
