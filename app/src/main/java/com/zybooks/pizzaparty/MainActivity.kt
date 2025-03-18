@@ -392,7 +392,7 @@ fun AddAlbumDialog(
    var showSuggestions by remember { mutableStateOf(false) } // For dropdown
    val context = LocalContext.current
    var albumCoverUrl by remember { mutableStateOf("") } // For API image
-   var marketValue by remember { mutableDoubleStateOf(0.0) }
+   var marketValue by remember { mutableStateOf("") }
    val searchResults = discogsViewModel.searchResults.value
 
    // Image picker
@@ -456,7 +456,7 @@ fun AddAlbumDialog(
                                  genre = album.genre?.joinToString(", ") ?: ""
 
                                  albumCoverUrl = album.coverImage ?: ""
-                                 marketValue = (album.lowestPrice ?: 0.0).toDouble()
+                                 //marketValue = (album.lowestPrice ?: 0.0).toDouble()
                                  //Log.d("MoneyDebug", "Market value: ${album.lowestPrice}")
                                  discogsViewModel.clearResults()
                               }
@@ -480,6 +480,10 @@ fun AddAlbumDialog(
             Spacer(modifier = Modifier.height(8.dp))
             TextField(value = genre, onValueChange = { genre = it },
                label = { Text(text = stringResource(R.string.genre)) },
+               singleLine = true, modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(8.dp))
+            TextField(value = marketValue, onValueChange = { marketValue = it },
+               label = { Text("Price: ") },
                singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -537,7 +541,7 @@ fun AddAlbumDialog(
                            releaseYear = releaseYear,
                            genre = genre,
                            imageUri = finalImageUri, // now dynamically chosen
-                           marketValue = marketValue
+                           marketValue = (marketValue).toDouble()
                         )
                      )
                      onDismiss()
