@@ -7,8 +7,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,17 +29,25 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,33 +62,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
-import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ListItem
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.border
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
-import android.util.Log
+import com.zybooks.pizzaparty.ui.theme.PizzaPartyTheme
 
 class MainActivity : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,7 +93,6 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
    val navController = rememberNavController()
    val vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
-   val discogsViewModel: DiscogsViewModel = viewModel()
    val statsViewModel: StatsViewModel = viewModel()
 
    NavHost(navController = navController, startDestination = "home") {
@@ -389,8 +384,6 @@ fun AddAlbumDialog(
    var releaseYear by remember { mutableStateOf("") }
    var genre by remember { mutableStateOf("") }
    var albumCoverUri by remember { mutableStateOf<Uri?>(null) }
-   var showSuggestions by remember { mutableStateOf(false) } // For dropdown
-   val context = LocalContext.current
    var albumCoverUrl by remember { mutableStateOf("") } // For API image
    var marketValue by remember { mutableStateOf("") }
    val searchResults = discogsViewModel.searchResults.value
@@ -509,7 +502,7 @@ fun AddAlbumDialog(
                Spacer(modifier = Modifier.width(8.dp))
 
                // Preview either user-uploaded image or Discogs image
-               val previewImage = albumCoverUri?.let { uri -> uri } ?: albumCoverUrl.takeIf { it.isNotBlank() }
+               val previewImage = albumCoverUri ?: albumCoverUrl.takeIf { it.isNotBlank() }
 
                if (previewImage != null) {
                   AsyncImage(
