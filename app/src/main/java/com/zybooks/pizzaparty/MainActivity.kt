@@ -104,11 +104,12 @@ fun MainScreen() {
    val navController = rememberNavController()
    val vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
    val discogsViewModel: DiscogsViewModel = viewModel()
+   val statsViewModel: StatsViewModel = viewModel()
 
    NavHost(navController = navController, startDestination = "home") {
       composable("home") { PizzaPartyScreen(navController, vinylCollectionViewModel) }
       composable("settings") { SettingsScreen(navController) }
-      composable("stats") { StatsScreen(navController) }
+      composable("stats") { StatsScreen(navController, statsViewModel, vinylCollectionViewModel) }
    }
 }
 

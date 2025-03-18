@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,9 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -44,13 +47,31 @@ class StatsViewModel : ViewModel() {
     private val _mostExpensiveAlbum = mutableStateOf("Unknown ($0.00)")
     val mostExpensiveAlbum: State<String> = _mostExpensiveAlbum
 
-    fun updateStats() {
+    fun updateStats(albums: List<Album>) {
+        _totalAlbums.value = albums.size
+        _totalArtists.value = albums.map { it.artist }.distinct().size
+
+        // Most Owned Artist
+        val artistFrequency = albums.groupingBy { it.artist }.eachCount()
+        _mostOwnedArtist.value = artistFrequency.maxByOrNull { it.value }?.key ?: "n/a"
+
+        // Oldest Album
+        _oldestAlbum.value = albums.minByOrNull { it.releaseYear.toIntOrNull() ?: Int.MAX_VALUE }?.name ?: "Unknown"
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(navController: NavController, statsViewModel: StatsViewModel = viewModel()) {
+fun StatsScreen(
+    navController: NavController,
+    statsViewModel: StatsViewModel = viewModel(),
+    vinylCollectionViewModel: VinylCollectionViewModel = viewModel()
+    ){
+    val albumList by vinylCollectionViewModel.albumList
+
+    LaunchedEffect(albumList) {
+        statsViewModel.updateStats(albumList)
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -58,6 +79,11 @@ fun StatsScreen(navController: NavController, statsViewModel: StatsViewModel = v
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { statsViewModel.updateStats(albumList) }) {
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh Stats")
                     }
                 }
             )
