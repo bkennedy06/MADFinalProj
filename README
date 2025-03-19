@@ -1,0 +1,33 @@
+1.) This project aimed to function as an interactive collection of all of the user's vinyl records. Including important details beneficial to the user such as, searching vinyls, a wishlist, standard collection 
+library, and statistics the user may find enjoyable and/or informative, like total albums owned, most expensive album, oldest album, total market value of the collection, etc. To make the adding process easier, I 
+employed the Discogs API to let the user search for said albums and have them autofill the parameters for ease of access and storage. All of which can be overwritten by the user if something is wrong or personal 
+preference. 
+
+2.) https://www.figma.com/design/8ezXcSDpTfcisyX894lvbM/Untitled?node-id=0-1&p=f&t=APjDpCgiPduqqBpR-0
+
+3.) Had to use Discogs for record searching. Used Retrofit to reorganize the API output into readable items for Kotlin. Used Navcontroller, scaffolds, a FAB, bottom bars, top bars, the string.xml for text, (attempted)
+language changing in settings (broke FAB functionality and ran out of time), modal bottom sheets, dialog popups, a lazy vertical grid for my background, cards to organize records, an alert dialog for the details of 
+each album, had to handle both URL and URI for image selection via coil, as well as a lazy column for language selection. 
+
+4.) List of dependencies with version numbers included, otherwise unchanged from the pizza party lab:
+implementation("androidx.navigation:navigation-compose:2.7.5")
+   implementation("androidx.core:core-ktx:1.12.0")
+   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+   implementation("androidx.activity:activity-compose:1.8.2")
+   implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+   implementation("androidx.compose.ui:ui")
+   implementation("androidx.compose.ui:ui-graphics")
+   implementation("androidx.compose.ui:ui-tooling-preview")
+   implementation("androidx.compose.material3:material3")
+   implementation("com.squareup.retrofit2:retrofit:2.9.0") // Retrofit for networking
+   implementation("com.squareup.retrofit2:converter-gson:2.9.0") // Gson converter
+   implementation("io.coil-kt:coil-compose:2.2.2") // For image URLs
+   testImplementation("junit:junit:4.13.2")
+   androidTestImplementation("androidx.test.ext:junit:1.1.5")
+   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+   androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
+   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+   debugImplementation("androidx.compose.ui:ui-tooling")
+   debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+5.) I thought my API integration for live searching and adding was pretty neat, allowing the user to not have to fill all required fields and lets them get up to speed if they have a larger collection to begin with
